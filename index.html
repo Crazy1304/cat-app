@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <!-- ИСПРАВЛЕНО: Правильный путь к скрипту Telegram -->
+    <!-- ИСПРАВЛЕНО: Правильный и полный путь к скрипту Telegram -->
     <script src="https://telegram.org"></script>
     <style>
         :root { --accent: #ff9500; --bg: #0d0d0f; --glass: rgba(255, 255, 255, 0.05); }
@@ -78,29 +78,31 @@
     </div>
 
 <script>
-    const tg = window.Telegram.WebApp;
-
-    function initApp() {
-        tg.ready();
-        tg.expand();
-        
-        // ИСПРАВЛЕНО: Правильный формат ссылок для кнопок
-        const botUser = "MeowVibe_bot";
-        const inviteText = encodeURIComponent("Пойми своего кота в MeowVibe! 🐾 Даю бонус доверия за вход!");
-        const userId = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : 'user';
-        const inviteUrl = "https://t.me" + botUser + "/app?startapp=ref_" + userId;
-        
-        document.getElementById('invite-link').href = "https://t.meshare/url?url=" + encodeURIComponent(inviteUrl) + "&text=" + inviteText;
-        
-        updateUI();
-    }
-
+    // ИСПРАВЛЕНО: Безопасная инициализация
+    let tg = window.Telegram ? window.Telegram.WebApp : null;
     let trust = 50;
+    const BOT_USERNAME = "MeowVibe_bot";
+
     const badPhrases = ["Где моя еда, кожаный? 😾", "Как царапну! 😼", "Тыг-дык устроить?", "Я не люблю диеты!"];
     const goodPhrases = ["Любимый хозяин... ❤️", "Мррр-мяу! ✨", "Ты лучший из людей.", "Гладь меня полностью!"];
 
+    function initApp() {
+        if (tg) {
+            tg.ready();
+            tg.expand();
+            
+            const inviteText = encodeURIComponent("Пойми своего кота в MeowVibe! 🐾");
+            const userId = tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : 'user';
+            const inviteUrl = "https://t.me" + BOT_USERNAME + "/app?startapp=ref_" + userId;
+            
+            document.getElementById('invite-link').href = "https://t.meshare/url?url=" + encodeURIComponent(inviteUrl) + "&text=" + inviteText;
+        }
+        updateUI();
+    }
+
     function startScan() {
-        if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('heavy');
+        // Проверка вибрации только если мы в Telegram
+        if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('heavy');
         
         const laser = document.getElementById('laser');
         const status = document.getElementById('status');
@@ -117,18 +119,17 @@
             const res = (trust > 60) ? goodPhrases[Math.floor(Math.random()*4)] : badPhrases[Math.floor(Math.random()*4)];
             status.innerText = res;
             
-            // ИСПРАВЛЕНО: Динамическое обновление кнопки поделиться
             const shareText = encodeURIComponent("Мой кот сказал: \"" + res + "\" 🐱\nУзнай правду в MeowVibe!");
             document.getElementById('share-link').href = "https://t.meshare/url?text=" + shareText;
             
             trust = Math.max(10, trust - 15);
             updateUI();
-            if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+            if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
         }, 2000);
     }
 
     function getOracle() {
-        if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+        if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
         const preds = ["Сегодня миска будет полна!", "Опасайся пылесоса.", "Время для ночного тыг-дыка!", "Кожаный будет щедр."];
         document.getElementById('oracle-text').innerText = preds[Math.floor(Math.random()*4)];
     }
@@ -136,13 +137,14 @@
     function updateUI() {
         const face = document.getElementById('cat-face');
         const fill = document.getElementById('trust-fill');
-        fill.style.width = trust + "%";
+        if (fill) fill.style.width = trust + "%";
         
         if(trust < 30) face.innerText = "😾";
         else if(trust > 75) face.innerText = "😇";
         else face.innerText = "😼";
     }
 
+    // Запуск приложения
     window.onload = initApp;
 </script>
 </body>
