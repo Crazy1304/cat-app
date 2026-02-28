@@ -21,7 +21,6 @@
         .trust-bar { width: 100%; height: 6px; background: #222; border-radius: 10px; margin: 10px 0; overflow: hidden; }
         #trust-fill { width: 50%; height: 100%; background: linear-gradient(90deg, #ff4d4d, var(--accent), #4aff4a); transition: 0.5s; }
         
-        /* Звуковая панель */
         .sound-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; width: 100%; max-width: 350px; margin-bottom: 20px; }
         .sound-item { 
             background: #1a1a1c; border-radius: 15px; padding: 15px 5px; text-align: center; 
@@ -47,10 +46,9 @@
 </head>
 <body>
 
-    <div style="font-size: 10px; opacity: 0.4; margin-bottom: 5px;">MEOWVIBE PRO v5.0</div>
+    <div style="font-size: 10px; opacity: 0.4; margin-bottom: 5px;">MEOWVIBE PRO v5.1</div>
     <div class="cat-avatar" id="cat-face">😼</div>
 
-    <!-- Звуковые хуки -->
     <div class="sound-grid">
         <div class="sound-item" onclick="playSound('magnet')">
             <span class="sound-icon">🔔</span>
@@ -79,23 +77,32 @@
     </div>
 
 <script>
-    let tg = window.Telegram.WebApp;
+    // 1. Инициализируем tg правильно и безопасно
+    const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
     let trust = 50;
     let lastMiau = "";
     const BOT_USERNAME = "MeowVibe_bot";
 
-    // Аудио-контекст для генерации звуков без внешних файлов (синтез)
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    // Инициализация аудио (создаем при первом клике для обхода политик браузера)
+    let audioCtx = null;
+
+    function initAudio() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+    }
 
     function playSound(type) {
-        if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+        initAudio();
+        // Проверка на наличие HapticFeedback (чтобы не было ошибок на ПК)
+        if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
         
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
         osc.connect(gain);
         gain.connect(audioCtx.destination);
 
-        if (type === 'magnet') { // Высокий звон миски
+        if (type === 'magnet') {
             osc.type = 'sine';
             osc.frequency.setValueAtTime(1200, audioCtx.currentTime);
             osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.5);
@@ -103,7 +110,7 @@
             gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
             osc.start(); osc.stop(audioCtx.currentTime + 0.5);
         } 
-        else if (type === 'stop') { // Шипение/Шум
+        else if (type === 'stop') {
             const bufferSize = audioCtx.sampleRate * 0.3;
             const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
             const data = buffer.getChannelData(0);
@@ -116,24 +123,19 @@
             noise.connect(noiseGain); noiseGain.connect(audioCtx.destination);
             noise.start();
         }
-        else if (type === 'purr') { // Низкое мурчание + Вибрация
+        else if (type === 'purr') {
             osc.type = 'sawtooth';
             osc.frequency.setValueAtTime(40, audioCtx.currentTime);
             gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
             osc.start(); 
-            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('soft');
+            if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('soft');
             setTimeout(() => { osc.stop(); }, 1000);
         }
     }
 
-    function initApp() {
-        tg.ready();
-        tg.expand();
-        updateUI();
-    }
-
     function startScan() {
-        if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('heavy');
+        initAudio();
+        if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('heavy');
         const laser = document.getElementById('laser');
         const status = document.getElementById('status');
         const btn = document.getElementById('btn');
@@ -154,12 +156,17 @@
     }
 
     function doInvite() {
-        tg.openTelegramLink(`https://t.me{BOT_USERNAME}&text=${encodeURIComponent("Узнай мысли своего кота! 🐾")}`);
+        const url = `https://t.me{BOT_USERNAME}&text=${encodeURIComponent("Узнай мысли своего кота! 🐾")}`;
+        if (tg) tg.openTelegramLink(url); else window.open(url);
     }
 
     function doShare() {
-        if (!lastMiau) return tg.showAlert("Сначала нажми на лапу!");
-        tg.openTelegramLink(`https://t.me{encodeURIComponent("Мой кот выдал: "+lastMiau+" \nПроверь своего в @"+BOT_USERNAME)}`);
+        if (!lastMiau) {
+            if (tg) tg.showAlert("Сначала нажми на лапу!"); else alert("Сначала нажми на лапу!");
+            return;
+        }
+        const url = `https://t.me{encodeURIComponent("Мой кот выдал: "+lastMiau+" \nПроверь своего в @"+BOT_USERNAME)}`;
+        if (tg) tg.openTelegramLink(url); else window.open(url);
     }
 
     function updateUI() {
@@ -167,7 +174,11 @@
         if (fill) fill.style.width = trust + "%";
     }
 
-    window.onload = initApp;
+    // Инициализация при загрузке
+    if (tg) {
+        tg.ready();
+        tg.expand();
+    }
 </script>
 </body>
 </html>
