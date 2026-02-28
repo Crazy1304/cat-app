@@ -5,180 +5,282 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <script src="https://telegram.org"></script>
     <style>
-        :root { --accent: #ff9500; --bg: #0d0d0f; --glass: rgba(255, 255, 255, 0.08); }
-        * { -webkit-touch-callout: none; user-select: none; box-sizing: border-box; touch-action: manipulation; }
-        body { 
-            background: var(--bg); color: white; font-family: -apple-system, sans-serif;
-            display: flex; flex-direction: column; align-items: center; margin: 0; padding: 20px;
-            min-height: 100vh; overflow-x: hidden;
+        :root { 
+            --accent: #ff9500; 
+            --gold: #ffd700;
+            --glass: rgba(255, 255, 255, 0.07);
+            --glass-border: rgba(255, 255, 255, 0.12);
         }
-        .cat-avatar { font-size: 70px; margin: 10px 0; transition: 0.3s; }
-        .main-card {
-            width: 100%; max-width: 350px; background: var(--glass); border-radius: 30px;
-            padding: 20px; border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(15px);
-            text-align: center; position: relative; margin-bottom: 15px;
-        }
-        .trust-bar { width: 100%; height: 6px; background: #222; border-radius: 10px; margin: 10px 0; overflow: hidden; }
-        #trust-fill { width: 50%; height: 100%; background: linear-gradient(90deg, #ff4d4d, var(--accent), #4aff4a); transition: 0.5s; }
-        
-        .sound-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; width: 100%; max-width: 350px; margin-bottom: 20px; }
-        .sound-item { 
-            background: #1a1a1c; border-radius: 15px; padding: 15px 5px; text-align: center; 
-            border: 1px solid #333; cursor: pointer; transition: 0.2s;
-        }
-        .sound-item:active { transform: scale(0.9); background: var(--accent); }
-        .sound-icon { font-size: 24px; display: block; margin-bottom: 5px; }
-        .sound-label { font-size: 10px; font-weight: bold; text-transform: uppercase; opacity: 0.8; }
 
-        .big-btn { 
-            width: 80px; height: 80px; border-radius: 50%; border: none; 
-            background: linear-gradient(135deg, #ff9500, #ff5e00); 
-            font-size: 35px; cursor: pointer; display: block; margin: 10px auto;
-            box-shadow: 0 5px 20px rgba(255,149,0,0.3); transition: 0.2s;
+        * { -webkit-touch-callout: none; user-select: none; box-sizing: border-box; outline: none; }
+
+        body { 
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: white; font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            display: flex; flex-direction: column; align-items: center; margin: 0; padding: 20px;
+            min-height: 100vh; overflow-x: hidden; position: relative;
         }
-        .social-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; max-width: 350px; }
-        .social-btn { background: #2a2a2e; color: white; padding: 12px; border-radius: 15px; font-size: 11px; text-align: center; border: none; font-weight: bold;}
-        .share-btn { background: #3390ec; }
+
+        /* Анимированный фон */
+        .bg-blob {
+            position: fixed; width: 300px; height: 300px; 
+            background: var(--accent); filter: blur(80px); opacity: 0.15;
+            border-radius: 50%; z-index: -1; animation: float 15s infinite alternate;
+        }
+        .bg-blob.blue { background: #3390ec; left: -100px; top: -100px; }
+        .bg-blob.orange { bottom: -100px; right: -100px; animation-delay: -5s; }
+        @keyframes float { 0% { transform: translate(0,0); } 100% { transform: translate(50px, 100px); } }
+
+        .glass-card {
+            width: 100%; max-width: 360px; background: var(--glass);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border); border-radius: 28px;
+            padding: 20px; margin-bottom: 15px; box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+
+        .setup-screen { display: block; text-align: center; margin-top: 10vh; }
+        .app-screen { display: none; width: 100%; max-width: 360px; }
+
+        input, select {
+            width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border);
+            color: white; padding: 14px; border-radius: 16px; margin-bottom: 12px; font-size: 15px;
+        }
+
+        .btn-main {
+            background: linear-gradient(135deg, #ff9500, #ff5e00); color: white;
+            border: none; padding: 16px; border-radius: 18px; font-weight: 700;
+            width: 100%; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 15px rgba(255,149,0,0.3);
+        }
+        .btn-main:active { transform: scale(0.96); }
+        .btn-premium { background: linear-gradient(135deg, #ffd700, #ff9500); color: black; margin-top: 10px; }
+
+        .mood-chart {
+            width: 100%; height: 50px; display: flex; align-items: flex-end; gap: 6px; 
+            margin: 10px 0; padding: 0 5px; background: rgba(255,255,255,0.03); border-radius: 10px;
+        }
+        .mood-bar { flex: 1; background: var(--accent); border-radius: 4px; min-height: 4px; transition: 0.8s; }
+
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin: 15px 0; }
+        .tool-btn { 
+            background: rgba(255,255,255,0.05); border-radius: 20px; padding: 15px 5px; 
+            text-align: center; border: 1px solid var(--glass-border); position: relative;
+        }
+        .lock { position: absolute; top: -5px; right: -5px; font-size: 12px; display: none; }
+
+        .limit-badge { font-size: 10px; color: var(--accent); font-weight: bold; margin-bottom: 5px; display: block; }
         
-        #laser { position: absolute; left: 0; width: 100%; height: 2px; background: var(--accent); display: none; z-index: 10; }
-        @keyframes scanAnim { 0% { top: 0%; } 100% { top: 100%; } }
+        .oracle-box {
+            background: rgba(255, 215, 0, 0.1); border: 1px solid var(--gold);
+            border-radius: 20px; padding: 15px; margin-top: 15px; display: none;
+        }
+
+        #scan-line { 
+            position: absolute; left: 0; width: 100%; height: 2px; 
+            background: var(--accent); box-shadow: 0 0 20px var(--accent); 
+            display: none; z-index: 10; top: 0;
+        }
+        @keyframes scanMove { 0% { top: 0%; } 100% { top: 100%; } }
     </style>
 </head>
 <body>
 
-    <div style="font-size: 10px; opacity: 0.4; margin-bottom: 5px;">MEOWVIBE PRO v5.1</div>
-    <div class="cat-avatar" id="cat-face">😼</div>
+    <div class="bg-blob blue"></div>
+    <div class="bg-blob orange"></div>
 
-    <div class="sound-grid">
-        <div class="sound-item" onclick="playSound('magnet')">
-            <span class="sound-icon">🔔</span>
-            <span class="sound-label">Магнит</span>
-        </div>
-        <div class="sound-item" onclick="playSound('stop')">
-            <span class="sound-icon">🙅‍♂️</span>
-            <span class="sound-label">Стоп!</span>
-        </div>
-        <div class="sound-item" onclick="playSound('purr')">
-            <span class="sound-icon">💤</span>
-            <span class="sound-label">Мурчало</span>
-        </div>
+    <!-- ЭКРАН НАСТРОЙКИ -->
+    <div id="setup" class="setup-screen glass-card">
+        <h2 style="color:var(--accent); margin-bottom: 20px;">ПРОФИЛЬ КОТА</h2>
+        <input type="text" id="cat-name" placeholder="Кличка питомца">
+        <select id="cat-age">
+            <option value="kitten">Котёнок (писклявый)</option>
+            <option value="adult" selected>Взрослый (стандарт)</option>
+            <option value="senior">Мудрый (басовитый)</option>
+        </select>
+        <select id="cat-temper">
+            <option value="1">Ласковый мурлыка</option>
+            <option value="2">Ночной тыгдык</option>
+            <option value="3">Маленький тиран</option>
+        </select>
+        <button class="btn-main" onclick="saveProfile()">СОЗДАТЬ ПАСПОРТ 🐾</button>
     </div>
 
-    <div class="main-card">
-        <div id="laser"></div>
-        <div class="trust-bar"><div id="trust-fill"></div></div>
-        <div id="status" style="font-size: 16px; min-height: 40px; margin: 5px 0; color: #ffcc00; font-weight: bold;">Готов к связи</div>
-        <button class="big-btn" id="btn" onclick="startScan()">🐾</button>
-    </div>
+    <!-- ОСНОВНОЙ ЭКРАН -->
+    <div id="app" class="app-screen">
+        <div class="glass-card" style="text-align: center;">
+            <div id="display-name" style="font-size: 24px; font-weight: 900; color: var(--accent);">КОТ</div>
+            <div class="mood-chart" id="chart"></div>
+            <div style="font-size: 10px; opacity: 0.5;">ТРЕКЕР НАСТРОЕНИЯ (НЕДЕЛЯ)</div>
+        </div>
 
-    <div class="social-grid">
-        <button class="social-btn" onclick="doInvite()">➕ ПОЗВАТЬ ДРУГА</button>
-        <button class="social-btn share-btn" onclick="doShare()">📢 ПОДЕЛИТЬСЯ</button>
+        <div class="glass-card">
+            <span class="limit-badge" id="trans-limit">Бесплатно: 5 переводов</span>
+            <input type="text" id="user-msg" placeholder="Текст для перевода в МЯУ...">
+            <button class="btn-main" onclick="translateMeow()">ОЗВУЧИТЬ</button>
+        </div>
+
+        <div class="glass-card" style="position: relative; overflow: hidden;">
+            <div id="scan-line"></div>
+            <div id="status" style="font-weight: bold; color: var(--accent); margin-bottom: 15px;">БИО-СЕТКА ГОТОВА</div>
+            <button onclick="deepScan()" style="background:none; border:none; font-size:60px; cursor:pointer; filter: drop-shadow(0 0 10px var(--accent));">🐾</button>
+            
+            <div class="grid-3">
+                <div class="tool-btn" onclick="useTool('magnet')">🍗<br><small>ПРИЗЫВ</small><div class="lock" id="l1">🔒</div></div>
+                <div class="tool-btn" onclick="useTool('stop')">🚫<br><small>СТОП</small><div class="lock" id="l2">🔒</div></div>
+                <div class="tool-btn" onclick="useTool('purr')">💤<br><small>МУР</small><div class="lock" id="l3">🔒</div></div>
+            </div>
+            <span class="limit-badge" id="tools-limit">Бесплатно: 3 хука</span>
+        </div>
+
+        <button class="btn-main btn-premium" id="premium-btn" onclick="buyPremium()">🔓 UNLIMITED + ОРАКУЛ (50 ⭐)</button>
+
+        <div class="oracle-box" id="oracle">
+            <div style="color: var(--gold); font-weight: bold; font-size: 12px; text-transform: uppercase;">🔮 Оракул Мяу</div>
+            <div id="oracle-text" style="font-size: 14px; margin-top: 8px; line-height: 1.4;"></div>
+        </div>
     </div>
 
 <script>
-    // 1. Инициализируем tg правильно и безопасно
-    const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
-    let trust = 50;
-    let lastMiau = "";
-    const BOT_USERNAME = "MeowVibe_bot";
-
-    // Инициализация аудио (создаем при первом клике для обхода политик браузера)
+    const tg = window.Telegram?.WebApp || null;
     let audioCtx = null;
+    let state = {
+        name: "", age: "adult", 
+        isPremium: false,
+        transLeft: 5, toolsLeft: 3,
+        moodHistory: [50, 50, 50, 50, 50, 50, 50]
+    };
 
-    function initAudio() {
-        if (!audioCtx) {
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        }
+    function initAudio() { if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+
+    function saveProfile() {
+        state.name = document.getElementById('cat-name').value || "Снежок";
+        state.age = document.getElementById('cat-age').value;
+        localStorage.setItem('meow_v11_state', JSON.stringify(state));
+        showApp();
     }
 
-    function playSound(type) {
-        initAudio();
-        // Проверка на наличие HapticFeedback (чтобы не было ошибок на ПК)
-        if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
-        
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-
-        if (type === 'magnet') {
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(1200, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.5);
-            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
-            osc.start(); osc.stop(audioCtx.currentTime + 0.5);
-        } 
-        else if (type === 'stop') {
-            const bufferSize = audioCtx.sampleRate * 0.3;
-            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-            const data = buffer.getChannelData(0);
-            for (let i = 0; i < bufferSize; i++) { data[i] = Math.random() * 2 - 1; }
-            const noise = audioCtx.createBufferSource();
-            noise.buffer = buffer;
-            const noiseGain = audioCtx.createGain();
-            noiseGain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-            noiseGain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
-            noise.connect(noiseGain); noiseGain.connect(audioCtx.destination);
-            noise.start();
-        }
-        else if (type === 'purr') {
-            osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(40, audioCtx.currentTime);
-            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-            osc.start(); 
-            if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('soft');
-            setTimeout(() => { osc.stop(); }, 1000);
-        }
-    }
-
-    function startScan() {
-        initAudio();
-        if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('heavy');
-        const laser = document.getElementById('laser');
-        const status = document.getElementById('status');
-        const btn = document.getElementById('btn');
-        
-        btn.disabled = true;
-        laser.style.display = 'block';
-        laser.style.animation = 'scanAnim 1.5s infinite linear';
-        status.innerText = "СКАНИРУЮ...";
-
-        setTimeout(() => {
-            laser.style.display = 'none';
-            btn.disabled = false;
-            const res = Math.random() > 0.5 ? "Любит тебя! ❤️" : "Хочет кусь! 😼";
-            status.innerText = res;
-            lastMiau = res;
-            updateUI();
-        }, 2000);
-    }
-
-    function doInvite() {
-        const url = `https://t.me{BOT_USERNAME}&text=${encodeURIComponent("Узнай мысли своего кота! 🐾")}`;
-        if (tg) tg.openTelegramLink(url); else window.open(url);
-    }
-
-    function doShare() {
-        if (!lastMiau) {
-            if (tg) tg.showAlert("Сначала нажми на лапу!"); else alert("Сначала нажми на лапу!");
-            return;
-        }
-        const url = `https://t.me{encodeURIComponent("Мой кот выдал: "+lastMiau+" \nПроверь своего в @"+BOT_USERNAME)}`;
-        if (tg) tg.openTelegramLink(url); else window.open(url);
+    function showApp() {
+        document.getElementById('setup').style.display = 'none';
+        document.getElementById('app').style.display = 'block';
+        document.getElementById('display-name').innerText = state.name.toUpperCase();
+        updateUI();
+        if(tg) { tg.ready(); tg.expand(); tg.setHeaderColor('#0f0c29'); }
     }
 
     function updateUI() {
-        const fill = document.getElementById('trust-fill');
-        if (fill) fill.style.width = trust + "%";
+        document.getElementById('trans-limit').innerText = state.isPremium ? "PREMIUM ACTIVE" : `Осталось переводов: ${state.transLeft}`;
+        document.getElementById('tools-limit').innerText = state.isPremium ? "PREMIUM ACTIVE" : `Осталось хуков: ${state.toolsLeft}`;
+        
+        if(state.isPremium) {
+            document.getElementById('premium-btn').style.display = 'none';
+            showOracle();
+        } else if(state.toolsLeft <= 0) {
+            document.getElementById('l1').style.display = document.getElementById('l2').style.display = document.getElementById('l3').style.display = 'block';
+        }
+        renderChart();
     }
 
-    // Инициализация при загрузке
-    if (tg) {
-        tg.ready();
-        tg.expand();
+    function renderChart() {
+        const chart = document.getElementById('chart');
+        chart.innerHTML = "";
+        state.moodHistory.forEach(v => {
+            const b = document.createElement('div');
+            b.className = 'mood-bar';
+            b.style.height = v + "%";
+            chart.appendChild(b);
+        });
     }
+
+    function synthMeow(f, d, v) {
+        initAudio();
+        const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+        o.type = 'triangle';
+        o.frequency.setValueAtTime(f, audioCtx.currentTime);
+        o.frequency.exponentialRampToValueAtTime(f*1.5, audioCtx.currentTime + d*0.2);
+        o.frequency.linearRampToValueAtTime(f*0.8, audioCtx.currentTime + d);
+        g.gain.setValueAtTime(0, audioCtx.currentTime);
+        g.gain.linearRampToValueAtTime(v, audioCtx.currentTime + 0.05);
+        g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + d);
+        o.connect(g); g.connect(audioCtx.destination);
+        o.start(); o.stop(audioCtx.currentTime + d);
+    }
+
+    function translateMeow() {
+        if(!state.isPremium && state.transLeft <= 0) return buyPremium();
+        const msg = document.getElementById('user-msg').value;
+        if(!msg) return;
+        
+        if(!state.isPremium) state.transLeft--;
+        localStorage.setItem('meow_v11_state', JSON.stringify(state));
+        updateUI();
+
+        let freq = state.age === 'kitten' ? 800 : (state.age === 'senior' ? 250 : 450);
+        synthMeow(freq, 0.4, 0.2);
+    }
+
+    function useTool(type) {
+        if(!state.isPremium && state.toolsLeft <= 0) return buyPremium();
+        if(!state.isPremium) state.toolsLeft--;
+        localStorage.setItem('meow_v11_state', JSON.stringify(state));
+        updateUI();
+
+        if(type === 'magnet') synthMeow(600, 0.5, 0.3);
+        if(type === 'stop') synthMeow(150, 0.2, 0.2, 'sawtooth');
+        if(type === 'purr') {
+            tg?.HapticFeedback.impactOccurred('soft');
+            synthMeow(40, 1.0, 0.1, 'sine');
+        }
+    }
+
+    function deepScan() {
+        const line = document.getElementById('scan-line');
+        const status = document.getElementById('status');
+        line.style.display = 'block';
+        line.style.animation = 'scanMove 2s infinite linear';
+        status.innerText = "СИНХРОНИЗАЦИЯ ПУЛЬСА...";
+
+        let beats = 0;
+        const heart = setInterval(() => {
+            tg?.HapticFeedback.impactOccurred('medium');
+            beats++; if(beats > 8) clearInterval(heart);
+        }, 450);
+
+        setTimeout(() => {
+            line.style.display = 'none';
+            const newMood = Math.floor(Math.random() * 60) + 40;
+            state.moodHistory.shift();
+            state.moodHistory.push(newMood);
+            localStorage.setItem('meow_v11_state', JSON.stringify(state));
+            updateUI();
+            status.innerText = "АНАЛИЗ ЗАВЕРШЕН ✅";
+        }, 4000);
+    }
+
+    function showOracle() {
+        const preds = [
+            "Сегодня миска будет полна до краев!", "Остерегайся пылесоса, он замышляет неладное.",
+            "Время для идеального кусь настанет в 18:00.", "Твой человек сегодня особенно добр.",
+            "Звезды сулят тебе самую мягкую коробку в мире."
+        ];
+        document.getElementById('oracle').style.display = 'block';
+        const day = new Date().getDate() % preds.length;
+        document.getElementById('oracle-text').innerText = preds[day];
+    }
+
+    function buyPremium() {
+        tg?.showConfirm("Разблокировать все функции и Оракула за 50 ⭐?", (ok) => {
+            if(ok) {
+                state.isPremium = true;
+                localStorage.setItem('meow_v11_state', JSON.stringify(state));
+                updateUI();
+                tg.showAlert("✨ ПРЕМИУМ АКТИВИРОВАН!");
+            }
+        });
+    }
+
+    window.onload = () => {
+        const saved = localStorage.getItem('meow_v11_state');
+        if(saved) { state = JSON.parse(saved); showApp(); }
+    };
 </script>
 </body>
 </html>
