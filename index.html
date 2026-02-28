@@ -1,169 +1,75 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <!-- ИСПРАВЛЕНО: Подключение официального SDK Telegram -->
-    <script src="https://telegram.org"></script>
-    <style>
-        :root { --accent: #ff9500; --bg: #0d0d0f; --glass: rgba(255, 255, 255, 0.05); }
-        
-        * {
-            -webkit-touch-callout: none !important;
-            -webkit-user-select: none !important;
-            user-select: none !important;
-            -webkit-tap-highlight-color: transparent !important;
-            touch-action: manipulation;
-            box-sizing: border-box;
-        }
-
-        body { 
-            background: var(--bg); color: white; font-family: -apple-system, sans-serif;
-            display: flex; flex-direction: column; align-items: center; margin: 0; padding: 20px;
-            min-height: 100vh; overflow: hidden;
-        }
-
-        .cat-avatar { font-size: 70px; margin: 15px 0; transition: 0.3s; }
-
-        .main-card {
-            width: 100%; max-width: 340px; background: var(--glass); border-radius: 30px;
-            padding: 25px; border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(15px);
-            text-align: center; position: relative; overflow: hidden;
-        }
-
-        #laser { 
-            position: absolute; left: 0; width: 100%; height: 3px; 
-            background: var(--accent); box-shadow: 0 0 15px var(--accent); 
-            display: none; z-index: 10; 
-        }
-        @keyframes scanAnim { 0% { top: 0%; } 100% { top: 100%; } }
-
-        .trust-bar { width: 100%; height: 8px; background: #222; border-radius: 10px; margin: 15px 0; overflow: hidden; }
-        #trust-fill { width: 50%; height: 100%; background: linear-gradient(90deg, #ff4d4d, var(--accent), #4aff4a); transition: 1s ease-in-out; }
-
-        .big-btn { 
-            width: 95px; height: 95px; border-radius: 50%; border: none; 
-            background: linear-gradient(135deg, #ff9500, #ff5e00); 
-            font-size: 45px; cursor: pointer; display: block; margin: 15px auto;
-            box-shadow: 0 8px 25px rgba(255,149,0,0.4); transition: 0.2s;
-        }
-        .big-btn:active { transform: scale(0.9); }
-        .big-btn:disabled { opacity: 0.5; filter: grayscale(1); }
-
-        .social-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; max-width: 340px; margin-top: 20px; }
-        .social-btn { 
-            background: #2a2a2e; border: 1px solid #444; color: white; 
-            padding: 15px; border-radius: 18px; font-size: 11px; font-weight: bold; 
-            cursor: pointer; text-align: center;
-        }
-        .share-btn { background: #3390ec; border: none; }
-        
-        .oracle-box { width: 100%; max-width: 340px; background: rgba(255,149,0,0.1); border-radius: 20px; padding: 15px; margin-bottom: 20px; border: 1px solid rgba(255,149,0,0.2); text-align: center; cursor: pointer; }
-    </style>
-</head>
-<body>
-
-    <div style="font-size: 11px; opacity: 0.4; margin-bottom: 5px; letter-spacing: 1px;">MEOWVIBE PRO v4.2</div>
-    <div class="cat-avatar" id="cat-face">😼</div>
-
-    <div class="oracle-box" onclick="getOracle()">
-        <div style="font-weight: bold; color: var(--accent); font-size: 14px; margin-bottom: 4px;">🔮 ОРАКУЛ МЯУ</div>
-        <div id="oracle-text" style="font-size: 12px; opacity: 0.8;">Нажми, чтобы узнать судьбу</div>
-    </div>
-
-    <div class="main-card">
-        <div id="laser"></div>
-        <div class="trust-bar"><div id="trust-fill"></div></div>
-        <div id="status" style="font-size: 18px; min-height: 50px; margin: 10px 0; color: #ffcc00; font-weight: bold; display: flex; align-items: center; justify-content: center;">Готов к связи</div>
-        <button class="big-btn" id="btn" onclick="startScan()">🐾</button>
-    </div>
-
-    <div class="social-grid">
-        <div class="social-btn" onclick="doInvite()">➕ ПОЗВАТЬ ДРУГА</div>
-        <div class="social-btn share-btn" onclick="doShare()">📢 ПОДЕЛИТЬСЯ</div>
-    </div>
-
 <script>
-    let tg = window.Telegram.WebApp;
-    let trust = 50;
-    let lastMiau = "";
-    const BOT_USERNAME = "MeowVibe_bot";
+    // Ждем полной загрузки документа
+    window.addEventListener('load', function() {
+        let tg = window.Telegram ? window.Telegram.WebApp : null;
+        let trust = 50;
+        let lastMiau = "";
+        const BOT_USERNAME = "MeowVibe_bot";
 
-    function initApp() {
-        tg.ready();
-        tg.expand();
-        // Пытаемся зафиксировать Mini App, чтобы не закрывалось свайпом вниз
-        if (tg.isVersionAtLeast('6.2')) {
-            tg.enableClosingConfirmation();
+        if (tg) {
+            tg.ready();
+            tg.expand();
+            // Показываем в консоль/alert, что всё ок
+            console.log("Telegram SDK готов");
+        } else {
+            alert("Telegram SDK не найден. Открой через бота!");
         }
-        updateUI();
-    }
 
-    const bad = ["Где еда, кожаный? 😾", "Как царапну! 😼", "Тыг-дык устроить?", "Неси паштет!", "Я здесь закон!", "Удали это, человек."];
-    const good = ["Любимый хозяин... ❤️", "Мррр-мяу! ✨", "Ты лучший человек.", "Гладь меня полностью!", "Давай спать вместе?", "Ты вкусно пахнешь рыбов."];
+        // Выносим функции в глобальную область, чтобы onclick их видел
+        window.startScan = function() {
+            const btn = document.getElementById('btn');
+            const status = document.getElementById('status');
+            const laser = document.getElementById('laser');
 
-    function startScan() {
-        if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('heavy');
-        
-        const laser = document.getElementById('laser');
-        const status = document.getElementById('status');
-        const btn = document.getElementById('btn');
-        
-        btn.disabled = true;
-        laser.style.display = 'block';
-        laser.style.animation = 'scanAnim 1.5s infinite linear';
-        status.innerText = "АНАЛИЗИРУЮ...";
-
-        setTimeout(() => {
-            laser.style.display = 'none';
-            btn.disabled = false;
+            if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
             
-            const isGood = Math.random() * 100 < trust;
-            const res = isGood ? good[Math.floor(Math.random()*good.length)] : bad[Math.floor(Math.random()*bad.length)];
-            
-            status.innerText = res;
-            lastMiau = res;
-            
-            // Логика изменения доверия
-            trust = Math.min(100, Math.max(10, trust + (isGood ? 5 : -15)));
-            
-            updateUI();
-            if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred(isGood ? 'success' : 'error');
-        }, 2000);
-    }
+            btn.disabled = true;
+            laser.style.display = 'block';
+            laser.style.animation = 'scanAnim 1.5s infinite linear';
+            status.innerText = "АНАЛИЗИРУЮ...";
 
-    function doInvite() {
-        const text = encodeURIComponent("Узнай мысли своего кота! 🐾");
-        const url = `https://t.me{BOT_USERNAME}&text=${text}`;
-        tg.openTelegramLink(url);
-    }
+            setTimeout(() => {
+                laser.style.display = 'none';
+                btn.disabled = false;
+                
+                const good = ["Любимый хозяин... ❤️", "Мррр-мяу! ✨", "Ты лучший человек."];
+                const bad = ["Где еда, кожаный? 😾", "Как царапну! 😼", "Неси паштет!"];
+                
+                const isGood = Math.random() > 0.5;
+                const res = isGood ? good[Math.floor(Math.random()*good.length)] : bad[Math.floor(Math.random()*bad.length)];
+                
+                status.innerText = res;
+                lastMiau = res;
+                updateUI();
+                
+                if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred(isGood ? 'success' : 'error');
+            }, 2000);
+        };
 
-    function doShare() {
-        if (!lastMiau) {
-            tg.showAlert("Сначала просканируй кота! 🐾");
-            return;
+        window.doInvite = function() {
+            const text = encodeURIComponent("Узнай мысли своего кота! 🐾");
+            const url = `https://t.me{BOT_USERNAME}&text=${text}`;
+            if (tg) tg.openTelegramLink(url);
+            else window.open(url);
+        };
+
+        window.doShare = function() {
+            if (!lastMiau) return alert("Сначала нажми на лапу!");
+            const text = encodeURIComponent(`Мой кот выдал: "${lastMiau}"\nПроверь своего в @${BOT_USERNAME}`);
+            const url = `https://t.me{text}`;
+            if (tg) tg.openTelegramLink(url);
+            else window.open(url);
+        };
+
+        window.getOracle = function() {
+            if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+            const preds = ["Миска будет полна!", "Опасайся пылесоса.", "Время тыг-дыка!"];
+            document.getElementById('oracle-text').innerText = preds[Math.floor(Math.random()*preds.length)];
+        };
+
+        function updateUI() {
+            const fill = document.getElementById('trust-fill');
+            if (fill) fill.style.width = trust + "%";
         }
-        const text = encodeURIComponent(`Мой кот выдал: "${lastMiau}"\n\nПроверь своего в @${BOT_USERNAME} 😼`);
-        tg.openTelegramLink(`https://t.me{text}`);
-    }
-
-    function getOracle() {
-        if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
-        const preds = ["Сегодня миска будет полна! 🍗", "Опасайся пылесоса... 💨", "Время для ночного тыг-дыка! 🏃‍♂️", "Кусь неизбежен. 🦷", "Солнечный зайчик близко... ☀️"];
-        document.getElementById('oracle-text').innerText = preds[Math.floor(Math.random()*preds.length)];
-    }
-
-    function updateUI() {
-        const face = document.getElementById('cat-face');
-        const fill = document.getElementById('trust-fill');
-        if (fill) fill.style.width = trust + "%";
-        
-        if(trust < 30) face.innerText = "😾";
-        else if(trust > 70) face.innerText = "😻";
-        else face.innerText = "😼";
-    }
-
-    window.onload = initApp;
+    });
 </script>
-</body>
-</html>
