@@ -12,110 +12,119 @@
             user-select: none; overflow-x: hidden; min-height: 100vh;
         }
 
-        /* Виджеты сверху */
-        .top-row { display: flex; justify-content: space-between; width: 100%; max-width: 340px; margin-bottom: 10px; }
-        .stat-badge { background: var(--glass); padding: 5px 12px; border-radius: 12px; font-size: 11px; border: 1px solid #333; }
+        /* Кот и Статы */
+        .cat-avatar { font-size: 65px; margin: 10px 0; transition: 0.4s; text-shadow: 0 0 20px rgba(255,149,0,0.2); }
+        .top-stats { display: flex; gap: 10px; margin-bottom: 15px; width: 100%; max-width: 340px; }
+        .stat-card { background: var(--glass); flex: 1; padding: 8px; border-radius: 12px; text-align: center; border: 1px solid #333; font-size: 11px; }
 
-        .cat-avatar { font-size: 65px; margin: 5px 0; transition: 0.4s; }
-
-        /* Таблица лидеров (мини) */
-        .leaderboard { width: 90%; background: var(--glass); border-radius: 15px; padding: 10px; margin-top: 15px; font-size: 11px; }
-        .leader-item { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        /* Оракул */
+        .oracle {
+            width: 90%; background: linear-gradient(135deg, #1a1a1c, #2a2a2e);
+            border-radius: 20px; padding: 15px; margin-bottom: 20px; border: 1px solid #444;
+            text-align: center; position: relative; cursor: pointer;
+        }
+        .oracle-tag { position: absolute; top: -10px; left: 15px; background: var(--accent); color: black; font-size: 9px; font-weight: bold; padding: 2px 6px; border-radius: 4px; }
 
         /* Ачивки */
-        .achievements { display: flex; gap: 8px; margin: 10px 0; }
-        .ach-icon { width: 38px; height: 38px; background: var(--glass); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; border: 1px solid #333; filter: grayscale(1); opacity: 0.3; }
-        .ach-active { filter: grayscale(0); opacity: 1; border-color: var(--accent); box-shadow: 0 0 10px var(--accent); }
+        .ach-row { display: flex; gap: 10px; margin-bottom: 20px; }
+        .ach { width: 42px; height: 42px; background: var(--glass); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; border: 1px solid #333; filter: grayscale(1); opacity: 0.3; transition: 0.5s; }
+        .ach.active { filter: grayscale(0); opacity: 1; border-color: var(--accent); box-shadow: 0 0 15px var(--accent); }
 
-        /* Основная карточка */
-        .main-card {
-            width: 100%; max-width: 340px; background: var(--glass); border-radius: 30px;
-            padding: 20px; border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(15px);
+        /* Главная панель */
+        .main-panel {
+            width: 100%; max-width: 340px; background: var(--glass); border-radius: 35px;
+            padding: 25px 15px; border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(15px);
             text-align: center; position: relative; overflow: hidden;
         }
         #laser { position: absolute; left: 0; width: 100%; height: 2px; background: var(--accent); box-shadow: 0 0 15px var(--accent); display: none; }
-        @keyframes scanAnim { 0% { top: 0%; } 100% { top: 100%; } }
+        @keyframes scan { 0% { top: 0%; } 100% { top: 100%; } }
 
-        .trust-bar { width: 100%; height: 6px; background: #222; border-radius: 10px; margin: 10px 0; overflow: hidden; }
+        .trust-line { width: 100%; height: 6px; background: #222; border-radius: 10px; margin: 12px 0; overflow: hidden; }
         #trust-fill { width: 50%; height: 100%; background: linear-gradient(90deg, #ff4d4d, var(--accent), #4aff4a); transition: 1s; }
 
-        .big-btn { width: 90px; height: 90px; border-radius: 50%; border: none; background: linear-gradient(135deg, #ff9500, #ff5e00); font-size: 40px; cursor: pointer; box-shadow: 0 5px 20px rgba(255,149,0,0.4); margin: 10px 0; }
+        .paw-btn { width: 100px; height: 100px; border-radius: 50%; border: none; background: linear-gradient(135deg, #ff9500, #ff5e00); font-size: 45px; cursor: pointer; box-shadow: 0 8px 25px rgba(255,149,0,0.4); margin-top: 15px; }
 
-        /* Социальные кнопки */
-        .social-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; max-width: 340px; margin-top: 15px; }
-        .social-btn { background: #2a2a2e; border: 1px solid #444; color: white; padding: 10px; border-radius: 12px; font-size: 11px; font-weight: bold; cursor: pointer; }
-        .share-btn { background: #3390ec; border: none; }
+        /* Футер */
+        .social-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; max-width: 340px; margin-top: 20px; }
+        .s-btn { background: #2a2a2e; border: 1px solid #444; color: white; padding: 12px; border-radius: 15px; font-size: 11px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <div class="top-row">
-        <div class="stat-badge">🏆 Ранг: <span id="rank-name">Новичок</span></div>
-        <div class="stat-badge">👫 Друзья: <span id="friend-count">0</span></div>
+    <div class="top-stats">
+        <div class="stat-card">🏆 Ранг: <b id="rank">Новичок</b></div>
+        <div class="stat-card">👥 Друзья: <b id="f-count">0</b></div>
     </div>
 
-    <div class="cat-avatar" id="cat-face">😼</div>
+    <div class="cat-avatar" id="face">😼</div>
 
-    <div class="achievements">
-        <div class="ach-icon" id="ach-1" title="Первый мяу">🤝</div>
-        <div class="ach-icon" id="ach-2" title="Сытый пуз">🥣</div>
-        <div class="ach-icon" id="ach-3" title="Альфа-Кот (5 друзей)">👑</div>
-        <div class="ach-icon" id="ach-4" title="Легенда (100 сканов)">💎</div>
+    <div class="ach-row">
+        <div class="ach" id="ach-1" title="Первый контакт">🤝</div>
+        <div class="ach" id="ach-2" title="Сытый кот">🥣</div>
+        <div class="ach" id="ach-3" title="Альфа-Кот">👑</div>
     </div>
 
-    <div class="main-card">
+    <div class="oracle" onclick="getOracle()">
+        <div class="oracle-tag" id="day-tag">7 ДНЕЙ FREE</div>
+        <div style="font-size: 10px; opacity: 0.5; margin-bottom: 4px;">ЕЖЕДНЕВНОЕ ПРОРОЧЕСТВО</div>
+        <div id="oracle-msg" style="color: #ffcc00; font-weight: bold; font-size: 13px;">Узнать свою судьбу на сегодня</div>
+    </div>
+
+    <div class="main-panel">
         <div id="laser"></div>
-        <div style="font-size: 10px; text-align: left; opacity: 0.6;">ДОВЕРИЕ</div>
-        <div class="trust-bar"><div id="trust-fill"></div></div>
+        <div style="font-size: 10px; display: flex; justify-content: space-between; opacity: 0.6;"><span>ДОВЕРИЕ КОТА</span><span id="t-pct">50%</span></div>
+        <div class="trust-line"><div id="trust-fill"></div></div>
 
-        <div id="status" style="font-size: 16px; min-height: 45px; margin: 10px 0; color: #ffcc00; font-weight: bold;">Приложи лапу...</div>
-        <button class="big-btn" id="btn" onclick="startScan()">🐾</button>
-        
-        <div id="share-zone" style="display:none; margin-top:10px;">
-            <button class="social-btn share-btn" style="width:100%" onclick="shareResult()">📢 ПЕРЕДАТЬ СЛОВА КОТА</button>
-        </div>
+        <div id="output" style="font-size: 18px; min-height: 50px; margin: 15px 0; font-weight: 700;">Приложи лапу...</div>
+        <button class="paw-btn" id="p-btn" onclick="scan()">🐾</button>
     </div>
 
-    <div class="social-grid">
-        <button class="social-btn" onclick="inviteFriend()">➕ ПРИГЛАСИТЬ ДРУГА</button>
-        <button class="social-btn" onclick="toggleLeaderboard()">📊 ТОП ПРАЙДА</button>
-    </div>
-
-    <div class="leaderboard" id="leaderboard" style="display:none;">
-        <div style="text-align:center; margin-bottom:5px; font-weight:bold; color:var(--accent);">ТОП-3 ПЕРЕВОДЧИКА</div>
-        <div class="leader-item"><span>1. Кот_Базилио</span><span>999 мяу</span></div>
-        <div class="leader-item"><span>2. Матроскин</span><span>850 мяу</span></div>
-        <div class="leader-item"><span>3. Вы (ТЫ)</span><span id="my-score">0 мяу</span></div>
+    <div class="social-btns">
+        <button class="s-btn" onclick="invite()">👥 ПОЗВАТЬ ДРУГА</button>
+        <button class="s-btn" style="background:#3390ec; border:none;" onclick="share()">📢 ПОДЕЛИТЬСЯ</button>
     </div>
 
 <script>
     const tg = window.Telegram.WebApp;
     tg.expand();
 
+    // КОНФИГУРАЦИЯ БОТА
+    const BOT_USERNAME = "MeowVibe_bot"; 
+
     let trust = 50;
     let scans = 0;
     let friends = 0;
-    const lastResult = "";
+    
+    // ТВОИ ФРАЗЫ
+    const phrases_bad = [
+        "Где моя еда, кожаный? 😾", 
+        "Как царапну! 😼", 
+        "Тыг-дык на голове устроить?", 
+        "Неси паштет!", 
+        "Я не люблю диеты!"
+    ];
+    const phrases_good = [
+        "Любимый кожаный хозяин... ❤️", 
+        "Мррр-мяу! ✨", 
+        "Ты лучший из людей.", 
+        "Гладь меня полностью!", 
+        "Мои мяу только для тебя."
+    ];
 
-    function startScan() {
-        if(trust < 10) return tg.showAlert("Кот игнорирует тебя 😿");
+    function scan() {
+        if(trust < 15) return tg.showAlert("Кот злится! Накорми его паштетом за звезды. ⭐️");
         
         const laser = document.getElementById('laser');
         laser.style.display = 'block';
-        laser.style.animation = 'scanAnim 1.2s infinite linear';
-        document.getElementById('status').innerText = "АНАЛИЗИРУЮ...";
+        laser.style.animation = 'scan 1.2s infinite linear';
+        document.getElementById('output').innerText = "АНАЛИЗИРУЮ ЧАСТОТЫ...";
+        tg.HapticFeedback.impactOccurred('heavy');
 
         setTimeout(() => {
             laser.style.display = 'none';
-            const phrases = trust > 60 ? 
-                ["Ты — мой лучший раб! ❤️", "Почеши за ушком, разрешаю.", "Мррр, сегодня ты молодец."] : 
-                ["Где паштет, кожаный? 😾", "Твои носки... они пахнут не мятой.", "Уйди, я занят важным ничем."];
-            
-            const res = phrases[Math.floor(Math.random()*phrases.length)];
-            document.getElementById('status').innerText = res;
-            document.getElementById('share-zone').style.display = 'block';
-            window.lastRes = res;
-            
+            const res = (trust > 65) ? phrases_good[Math.floor(Math.random()*5)] : phrases_bad[Math.floor(Math.random()*5)];
+            document.getElementById('output').innerText = res;
+            window.currentRes = res;
             scans++;
             trust = Math.max(5, trust - 15);
             updateUI();
@@ -123,44 +132,55 @@
         }, 2000);
     }
 
-    function shareResult() {
-        const text = encodeURIComponent(`Мой кот только что сказал мне: "${window.lastRes}" 🐱\nПойми своего кота в MeowVibe!`);
-        tg.openTelegramLink(`https://t.me{text}`);
-    }
-
-    function inviteFriend() {
-        const text = encodeURIComponent("Стань частью моей кошачьей банды и получи +100% доверия кота! 🐾");
-        tg.openTelegramLink(`https://t.me{tg.initDataUnsafe.user?.id}&text=${text}`);
-        // Симуляция приглашения для теста
+    function invite() {
+        const url = `https://t.me{BOT_USERNAME}/app?startapp=ref_${tg.initDataUnsafe.user?.id || 'id'}`;
+        const text = encodeURIComponent("Пойми, что думает твой кот! 🐾 Заходи в MeowVibe и получи бонус доверия!");
+        tg.openTelegramLink(`https://t.me{url}&text=${text}`);
+        // Симуляция для теста ачивки
         friends++; 
         trust = 100;
         updateUI();
     }
 
-    function updateUI() {
-        const face = document.getElementById('cat-face');
-        const fill = document.getElementById('trust-fill');
-        fill.style.width = trust + "%";
-        document.getElementById('my-score').innerText = scans + " мяу";
-        document.getElementById('friend-count').innerText = friends;
-
-        if(trust < 30) face.innerText = "😾";
-        else if(trust > 75) face.innerText = "😇";
-        else face.innerText = "😼";
-
-        if(scans > 0) document.getElementById('ach-1').classList.add('ach-active');
-        if(trust >= 100) document.getElementById('ach-2').classList.add('ach-active');
-        if(friends >= 1) document.getElementById('ach-3').classList.add('ach-active');
-        if(scans >= 100) document.getElementById('ach-4').classList.add('ach-active');
-        
-        const ranks = ["Новичок", "Кошатник", "Заклинатель", "Бог Котов"];
-        document.getElementById('rank-name').innerText = ranks[Math.min(Math.floor(scans/10), 3)];
+    function share() {
+        if(!window.currentRes) return tg.showAlert("Сначала узнай мысли кота! 🐾");
+        const text = encodeURIComponent(`Мой кот только что сказал мне: "${window.currentRes}" 🐱\nУзнай правду о своем питомце в MeowVibe!`);
+        tg.openTelegramLink(`https://t.me{text}`);
     }
 
-    function toggleLeaderboard() {
-        const lb = document.getElementById('leaderboard');
-        lb.style.display = lb.style.display === 'none' ? 'block' : 'none';
-        tg.HapticFeedback.impactOccurred('light');
+    function getOracle() {
+        tg.HapticFeedback.impactOccurred('medium');
+        const pred = [
+            "Сегодня будет лишняя порция паштета!",
+            "Опасайся пылесоса — он замышляет зло.",
+            "Звезды велят тебе поспать 18 часов сегодня.",
+            "Кожаный сегодня будет особенно щедр на поглаживания.",
+            "Будь осторожен с кактусом — он может уколоть."
+        ];
+        document.getElementById('oracle-msg').innerText = pred[Math.floor(Math.random()*pred.length)];
+        tg.showAlert("Оракул Мяу открыл истину!");
+    }
+
+    function updateUI() {
+        const f = document.getElementById('face');
+        const fill = document.getElementById('trust-fill');
+        fill.style.width = trust + "%";
+        document.getElementById('t-pct').innerText = trust + "%";
+        document.getElementById('f-count').innerText = friends;
+        
+        // Меняем аватар в зависимости от доверия
+        if(trust < 30) { f.innerText = "😾"; fill.style.background = "#ff4d4d"; }
+        else if(trust > 75) { f.innerText = "😇"; fill.style.background = "#4aff4a"; }
+        else { f.innerText = "😼"; fill.style.background = "var(--accent)"; }
+
+        // Проверка ачивок
+        if(scans > 0) document.getElementById('ach-1').classList.add('active');
+        if(trust >= 100) document.getElementById('ach-2').classList.add('active');
+        if(friends > 0) document.getElementById('ach-3').classList.add('active');
+        
+        // Обновление ранга
+        const ranks = ["Новичок", "Кошатник", "Мастер Мяу", "Кошачий Бог"];
+        document.getElementById('rank').innerText = ranks[Math.min(Math.floor(scans/5), 3)];
     }
 
     updateUI();
