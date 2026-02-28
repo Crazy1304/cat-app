@@ -1,14 +1,142 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <script src="https://telegram.org"></script>
     <style>
-        body { background: #1a1a1a; color: white; text-align: center; font-family: sans-serif; }
-        button { background: #ffaa00; border: none; padding: 15px 30px; border-radius: 50px; font-size: 18px; margin-top: 50px; }
+        :root {
+            --tg-theme-bg-color: #1c1c1e;
+            --tg-theme-button-color: #ff9500;
+            --tg-theme-text-color: #ffffff;
+        }
+
+        body {
+            background-color: var(--tg-theme-bg-color);
+            color: var(--tg-theme-text-color);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        .container {
+            text-align: center;
+            padding: 20px;
+            width: 90%;
+        }
+
+        h1 { font-size: 28px; margin-bottom: 10px; font-weight: 800; letter-spacing: -0.5px; }
+        p { opacity: 0.6; font-size: 16px; margin-bottom: 40px; }
+
+        /* Анимированная кнопка-лапка */
+        .scan-button {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, #ff9500 0%, #ff5e00 100%);
+            border-radius: 50%;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 50px;
+            cursor: pointer;
+            box-shadow: 0 0 30px rgba(255, 149, 0, 0.4);
+            position: relative;
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            animation: pulse 2s infinite;
+        }
+
+        .scan-button:active { transform: scale(0.9); }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 149, 0, 0.7); }
+            70% { box-shadow: 0 0 0 25px rgba(255, 149, 0, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 149, 0, 0); }
+        }
+
+        /* Окно результата в стиле Glassmorphism */
+        #result-card {
+            margin-top: 40px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            min-height: 80px;
+            display: none;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .cat-emoji { font-size: 24px; margin-bottom: 8px; display: block; }
+        #text-output { font-size: 18px; font-weight: 500; line-height: 1.4; color: #ffcc00; }
+
+        /* Лоадер (волны сканирования) */
+        .loader {
+            display: none;
+            margin-top: 20px;
+            font-weight: bold;
+            color: #ff9500;
+        }
     </style>
 </head>
 <body>
-    <h1>Переводчик с кошачьего 🐾</h1>
-    <button onclick="alert('Запись пошла!')">Слушать кота</button>
+
+    <div class="container">
+        <h1>MeowVibe 🐾</h1>
+        <p>Направь телефон на кота и нажми</p>
+
+        <button class="scan-button" onclick="startScan()">🐾</button>
+
+        <div class="loader" id="loader">АНАЛИЗИРУЮ ЧАСТОТЫ...</div>
+
+        <div id="result-card">
+            <span class="cat-emoji">🐱 говорит:</span>
+            <div id="text-output"></div>
+        </div>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand(); // Развернуть на весь экран
+
+        const phrases = [
+            "Я вижу дно миски. Это объявление войны!",
+            "Положи еду и никто не пострадает.",
+            "Твой кожаный вид меня не насытит, неси паштет!",
+            "Кусь активирован через 3... 2... 1...",
+            "Уйди с моей территории, двуногий слуга.",
+            "Сегодня я буду спать на твоем лице."
+        ];
+
+        function startScan() {
+            // Вибрация при нажатии
+            tg.HapticFeedback.impactOccurred('medium');
+            
+            document.getElementById('result-card').style.display = 'none';
+            document.getElementById('loader').style.display = 'block';
+            
+            // Имитация процесса сканирования
+            setTimeout(() => {
+                const randomPhrase = phrases[Math.floor(Math.random() * phrases.length)];
+                
+                document.getElementById('loader').style.display = 'none';
+                document.getElementById('result-card').style.display = 'block';
+                document.getElementById('text-output').innerText = randomPhrase;
+                
+                // Вибрация при готовности результата
+                tg.HapticFeedback.notificationOccurred('success');
+            }, 2000);
+        }
+    </script>
 </body>
 </html>
