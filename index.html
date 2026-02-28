@@ -8,134 +8,117 @@
         :root {
             --tg-theme-bg-color: #1c1c1e;
             --tg-theme-button-color: #ff9500;
-            --tg-theme-text-color: #ffffff;
         }
 
         body {
             background-color: var(--tg-theme-bg-color);
-            color: var(--tg-theme-text-color);
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            color: white;
+            font-family: -apple-system, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             height: 100vh;
             margin: 0;
-            overflow: hidden;
+            /* ОТКЛЮЧАЕМ ВЫДЕЛЕНИЕ ТЕКСТА ПОВСЕМЕСТНО */
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
         }
 
-        .container {
-            text-align: center;
-            padding: 20px;
-            width: 90%;
-        }
+        .container { text-align: center; width: 90%; }
 
-        h1 { font-size: 28px; margin-bottom: 10px; font-weight: 800; letter-spacing: -0.5px; }
-        p { opacity: 0.6; font-size: 16px; margin-bottom: 40px; }
-
-        /* Анимированная кнопка-лапка */
         .scan-button {
-            width: 120px;
-            height: 120px;
+            width: 130px;
+            height: 130px;
             background: linear-gradient(135deg, #ff9500 0%, #ff5e00 100%);
             border-radius: 50%;
             border: none;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 50px;
+            font-size: 60px;
             cursor: pointer;
-            box-shadow: 0 0 30px rgba(255, 149, 0, 0.4);
-            position: relative;
-            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 0 40px rgba(255, 149, 0, 0.4);
+            transition: transform 0.1s;
             animation: pulse 2s infinite;
+            /* ЗАПРЕТ ВЫДЕЛЕНИЯ ДЛЯ КНОПКИ */
+            -webkit-tap-highlight-color: transparent;
         }
 
-        .scan-button:active { transform: scale(0.9); }
+        .scan-button:active { transform: scale(0.92); opacity: 0.9; }
 
         @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(255, 149, 0, 0.7); }
-            70% { box-shadow: 0 0 0 25px rgba(255, 149, 0, 0); }
+            0% { box-shadow: 0 0 0 0 rgba(255, 149, 0, 0.6); }
+            70% { box-shadow: 0 0 0 30px rgba(255, 149, 0, 0); }
             100% { box-shadow: 0 0 0 0 rgba(255, 149, 0, 0); }
         }
 
-        /* Окно результата в стиле Glassmorphism */
         #result-card {
             margin-top: 40px;
-            padding: 20px;
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(15px);
+            border-radius: 24px;
             border: 1px solid rgba(255, 255, 255, 0.1);
-            min-height: 80px;
             display: none;
-            animation: slideUp 0.5s ease-out;
+            animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
         @keyframes slideUp {
-            from { opacity: 0; transform: translateY(20px); }
+            from { opacity: 0; transform: translateY(30px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        .cat-emoji { font-size: 24px; margin-bottom: 8px; display: block; }
-        #text-output { font-size: 18px; font-weight: 500; line-height: 1.4; color: #ffcc00; }
-
-        /* Лоадер (волны сканирования) */
-        .loader {
-            display: none;
-            margin-top: 20px;
-            font-weight: bold;
-            color: #ff9500;
-        }
+        #text-output { font-size: 20px; font-weight: 600; color: #ffcc00; }
+        .loader { display: none; margin-top: 25px; font-weight: bold; color: #ff9500; letter-spacing: 1px; }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h1>MeowVibe 🐾</h1>
-        <p>Направь телефон на кота и нажми</p>
+        <h1 style="margin-bottom: 5px;">MeowVibe 🐾</h1>
+        <p style="opacity: 0.5; margin-bottom: 50px;">Зажми лапку, чтобы услышать мысли</p>
 
         <button class="scan-button" onclick="startScan()">🐾</button>
 
-        <div class="loader" id="loader">АНАЛИЗИРУЮ ЧАСТОТЫ...</div>
+        <div class="loader" id="loader">СЛУШАЮ МЯУКАНИЕ...</div>
 
         <div id="result-card">
-            <span class="cat-emoji">🐱 говорит:</span>
             <div id="text-output"></div>
         </div>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
-        tg.expand(); // Развернуть на весь экран
+        tg.expand();
 
-        const phrases = [
-            "Я вижу дно миски. Это объявление войны!",
-            "Положи еду и никто не пострадает.",
-            "Твой кожаный вид меня не насытит, неси паштет!",
-            "Кусь активирован через 3... 2... 1...",
-            "Уйди с моей территории, двуногий слуга.",
-            "Сегодня я буду спать на твоем лице."
+        // ТВОИ ФРАЗЫ ТУТ:
+        const catPhrases = [
+            "Голод: Человек, миска пуста уже 5 минут! Это геноцид!",
+            "Злость: Твои поглаживания сейчас лишние. Уйди.",
+            "Любовь: Ладно, ты сегодня неплохо поработал. Можешь почесать за ушком.",
+            "Голод: Неси паштет, или я съем твои кактусы!",
+            "Скука: Почему ты сидишь в телефоне, а не ловишь мне мух?"
         ];
 
         function startScan() {
-            // Вибрация при нажатии
-            tg.HapticFeedback.impactOccurred('medium');
+            // Сильная вибрация при нажатии
+            tg.HapticFeedback.impactOccurred('heavy');
             
             document.getElementById('result-card').style.display = 'none';
             document.getElementById('loader').style.display = 'block';
             
-            // Имитация процесса сканирования
             setTimeout(() => {
-                const randomPhrase = phrases[Math.floor(Math.random() * phrases.length)];
+                const randomPhrase = catPhrases[Math.floor(Math.random() * catPhrases.length)];
                 
                 document.getElementById('loader').style.display = 'none';
                 document.getElementById('result-card').style.display = 'block';
-                document.getElementById('text-output').innerText = randomPhrase;
+                document.getElementById('text-output').innerText = "🐱: " + randomPhrase;
                 
-                // Вибрация при готовности результата
+                // Вибрация успеха при выдаче результата
                 tg.HapticFeedback.notificationOccurred('success');
-            }, 2000);
+            }, 1800);
         }
     </script>
 </body>
