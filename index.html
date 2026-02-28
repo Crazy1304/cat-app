@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <!-- ИСПРАВЛЕНО: Правильный путь к SDK Telegram -->
+    <!-- Добавляем версию ?v=1 к скрипту, чтобы пробить кэш -->
     <script src="https://telegram.org"></script>
     <style>
         :root { --accent: #ff9500; --bg: #0d0d0f; --glass: rgba(255, 255, 255, 0.05); }
         
-        /* ПОЛНАЯ БЛОКИРОВКА ВЫДЕЛЕНИЯ ТЕКСТА И СИНЕГО КВАДРАТА */
+        /* ЖЕСТКАЯ БЛОКИРОВКА ВЫДЕЛЕНИЯ */
         * {
             -webkit-touch-callout: none !important;
             -webkit-user-select: none !important;
@@ -27,26 +27,21 @@
 
         .main-card {
             width: 100%; max-width: 320px; background: var(--glass); border-radius: 30px;
-            padding: 20px; border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px); text-align: center; position: relative;
+            padding: 20px; border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(15px);
+            text-align: center; position: relative;
         }
 
-        #laser { 
-            position: absolute; left: 0; width: 100%; height: 2px; 
-            background: var(--accent); box-shadow: 0 0 15px var(--accent); 
-            display: none; pointer-events: none; z-index: 10; 
-        }
+        #laser { position: absolute; left: 0; width: 100%; height: 2px; background: var(--accent); box-shadow: 0 0 15px var(--accent); display: none; pointer-events: none; z-index: 10; }
         @keyframes scanAnim { 0% { top: 0%; } 100% { top: 100%; } }
 
         .trust-bar { width: 100%; height: 6px; background: #222; border-radius: 10px; margin: 10px 0; overflow: hidden; }
         #trust-fill { width: 50%; height: 100%; background: linear-gradient(90deg, #ff4d4d, var(--accent), #4aff4a); transition: 1s; }
 
-        /* КНОПКА ЛАПА */
         .big-btn { 
             width: 90px; height: 90px; border-radius: 50%; border: none; 
             background: linear-gradient(135deg, #ff9500, #ff5e00); 
             font-size: 40px; cursor: pointer; display: block; margin: 15px auto;
-            box-shadow: 0 5px 20px rgba(255,149,0,0.4); outline: none;
+            box-shadow: 0 5px 20px rgba(255,149,0,0.4);
         }
         .big-btn:active { transform: scale(0.9); }
 
@@ -54,7 +49,7 @@
         .social-btn { 
             background: #2a2a2e; border: 1px solid #444; color: white; 
             padding: 14px; border-radius: 15px; font-size: 11px; font-weight: bold; 
-            cursor: pointer; text-decoration: none; text-align: center; display: block;
+            cursor: pointer; text-align: center;
         }
         .share-btn { background: #3390ec; border: none; }
         
@@ -63,7 +58,7 @@
 </head>
 <body>
 
-    <div style="font-size: 11px; opacity: 0.5; margin-bottom: 5px;">MEOWVIBE PRO v4.1</div>
+    <div style="font-size: 11px; opacity: 0.5; margin-bottom: 5px;">MEOWVIBE PRO v4.2</div>
     <div class="cat-avatar" id="cat-face">😼</div>
 
     <div class="oracle-box" onclick="getOracle()">
@@ -79,25 +74,29 @@
     </div>
 
     <div class="social-grid">
-        <!-- ИСПРАВЛЕНО: Ссылки теперь работают через JS вызов tg.openTelegramLink -->
-        <div class="social-btn" onclick="inviteFriends()">➕ ПОЗВАТЬ ДРУГА</div>
-        <div class="social-btn share-btn" onclick="shareResult()">📢 ПОДЕЛИТЬСЯ</div>
+        <div class="social-btn" onclick="doInvite()">➕ ПОЗВАТЬ ДРУГА</div>
+        <div class="social-btn share-btn" onclick="doShare()">📢 ПОДЕЛИТЬСЯ</div>
     </div>
 
 <script>
-    const tg = window.Telegram.WebApp;
-    tg.ready(); // Сообщаем Telegram, что приложение готово
-    tg.expand(); // Разворачиваем на весь экран
-
+    // 1. Инициализация Telegram
+    let tg = window.Telegram ? window.Telegram.WebApp : null;
     let trust = 50;
-    let lastPhrase = "";
-    const BOT_USERNAME = "MeowVibe_bot";
+    let lastMiau = "";
 
-    const badPhrases = ["Где моя еда, кожаный? 😾", "Как царапну! 😼", "Тыг-дык на голове устроить?", "Я не люблю диеты!"];
-    const goodPhrases = ["Любимый хозяин... ❤️", "Мррр-мяу! ✨", "Ты лучший из людей.", "Гладь меня полностью!"];
+    function initApp() {
+        if (tg) {
+            tg.ready();
+            tg.expand();
+        }
+        updateUI();
+    }
+
+    const bad = ["Где еда, кожаный? 😾", "Как царапну! 😼", "Тыг-дык устроить?", "Неси паштет!"];
+    const good = ["Любимый хозяин... ❤️", "Мррр-мяу! ✨", "Ты лучший человек.", "Гладь меня полностью!"];
 
     function startScan() {
-        if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('heavy');
+        if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('heavy');
         
         const laser = document.getElementById('laser');
         const status = document.getElementById('status');
@@ -112,57 +111,45 @@
             laser.style.display = 'none';
             btn.disabled = false;
             
-            const list = (trust > 60) ? goodPhrases : badPhrases;
-            const res = list[Math.floor(Math.random() * list.length)];
-            
+            const res = (trust > 60) ? good[Math.floor(Math.random()*4)] : bad[Math.floor(Math.random()*4)];
             status.innerText = res;
-            lastPhrase = res;
+            lastMiau = res; // Сохраняем результат
             
             trust = Math.max(10, trust - 15);
             updateUI();
-            
-            if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+            if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
         }, 2000);
     }
 
-    function inviteFriends() {
-        if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
-        
-        const userId = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : 'user';
-        const inviteLink = `https://t.me{BOT_USERNAME}/app?startapp=ref_${userId}`;
-        const text = encodeURIComponent("Узнай, что думает твой кот! 🐾 Даю бонус доверия за вход!");
-        const fullUrl = `https://t.me{inviteLink}&text=${text}`;
-        
-        tg.openTelegramLink(fullUrl);
+    function doInvite() {
+        if (!tg) return;
+        const url = "https://t.me_" + (tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : "1");
+        const text = encodeURIComponent("Узнай мысли своего кота! 🐾");
+        tg.openTelegramLink("https://t.me" + encodeURIComponent(url) + "&text=" + text);
     }
 
-    function shareResult() {
-        if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
-        if (!lastPhrase) return tg.showAlert("Сначала узнай мысли кота! 🐾");
-        
-        const shareText = encodeURIComponent(`Мой кот сказал мне: "${lastPhrase}" 🐱\nУзнай правду в MeowVibe!`);
-        const fullUrl = `https://t.me{shareText}`;
-        
-        tg.openTelegramLink(fullUrl);
+    function doShare() {
+        if (!lastMiau) return tg.showAlert("Сначала нажми на лапу!");
+        const text = encodeURIComponent("Мой кот сказал: " + lastMiau);
+        tg.openTelegramLink("https://t.me" + text);
     }
 
     function getOracle() {
-        if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
-        const preds = ["Сегодня миска будет полна!", "Опасайся пылесоса.", "Время для ночного тыг-дыка!", "Кожаный сегодня будет щедр."];
-        document.getElementById('oracle-text').innerText = preds[Math.floor(Math.random() * 4)];
+        if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+        const preds = ["Сегодня миска будет полна!", "Опасайся пылесоса.", "Время для ночного тыг-дыка!"];
+        document.getElementById('oracle-text').innerText = preds[Math.floor(Math.random()*3)];
     }
 
     function updateUI() {
         const face = document.getElementById('cat-face');
         const fill = document.getElementById('trust-fill');
         if (fill) fill.style.width = trust + "%";
-        
         if(trust < 30) face.innerText = "😾";
         else if(trust > 75) face.innerText = "😇";
         else face.innerText = "😼";
     }
 
-    updateUI();
+    window.onload = initApp;
 </script>
 </body>
 </html>
