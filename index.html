@@ -6,83 +6,108 @@
     <script src="https://telegram.org"></script>
     <style>
         :root {
-            --tg-theme-bg-color: #1c1c1e;
+            --tg-theme-bg-color: #121214;
             --tg-theme-button-color: #ff9500;
         }
 
         body {
             background-color: var(--tg-theme-bg-color);
             color: white;
-            font-family: -apple-system, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             height: 100vh;
             margin: 0;
-            /* ОТКЛЮЧАЕМ ВЫДЕЛЕНИЕ ТЕКСТА ПОВСЕМЕСТНО */
             user-select: none;
             -webkit-user-select: none;
             touch-action: manipulation;
+            overflow: hidden;
+            transition: background 0.5s ease;
         }
 
-        .container { text-align: center; width: 90%; }
+        .container { text-align: center; width: 90%; z-index: 2; }
+
+        h1 { font-size: 32px; margin-bottom: 5px; letter-spacing: -1px; }
+        .subtitle { opacity: 0.6; margin-bottom: 50px; font-size: 14px; }
 
         .scan-button {
-            width: 130px;
-            height: 130px;
+            width: 140px;
+            height: 140px;
             background: linear-gradient(135deg, #ff9500 0%, #ff5e00 100%);
             border-radius: 50%;
             border: none;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 60px;
+            font-size: 65px;
             cursor: pointer;
-            box-shadow: 0 0 40px rgba(255, 149, 0, 0.4);
-            transition: transform 0.1s;
+            box-shadow: 0 0 50px rgba(255, 149, 0, 0.3);
+            transition: transform 0.1s, box-shadow 0.3s;
             animation: pulse 2s infinite;
-            /* ЗАПРЕТ ВЫДЕЛЕНИЯ ДЛЯ КНОПКИ */
             -webkit-tap-highlight-color: transparent;
+            margin: 0 auto;
         }
 
-        .scan-button:active { transform: scale(0.92); opacity: 0.9; }
+        .scan-button:active { transform: scale(0.9); box-shadow: 0 0 20px rgba(255, 149, 0, 0.5); }
 
         @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(255, 149, 0, 0.6); }
-            70% { box-shadow: 0 0 0 30px rgba(255, 149, 0, 0); }
+            0% { box-shadow: 0 0 0 0 rgba(255, 149, 0, 0.5); }
+            70% { box-shadow: 0 0 0 25px rgba(255, 149, 0, 0); }
             100% { box-shadow: 0 0 0 0 rgba(255, 149, 0, 0); }
         }
 
         #result-card {
-            margin-top: 40px;
+            margin-top: 35px;
             padding: 25px;
-            background: rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(15px);
-            border-radius: 24px;
+            background: rgba(255, 255, 255, 0.07);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 28px;
             border: 1px solid rgba(255, 255, 255, 0.1);
             display: none;
-            animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            animation: slideUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            max-width: 280px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         @keyframes slideUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
+            from { opacity: 0; transform: translateY(40px) scale(0.9); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
         }
 
-        #text-output { font-size: 20px; font-weight: 600; color: #ffcc00; }
-        .loader { display: none; margin-top: 25px; font-weight: bold; color: #ff9500; letter-spacing: 1px; }
+        #text-output { font-size: 22px; font-weight: 700; line-height: 1.3; }
+        
+        /* Классы настроения */
+        .status-hunger { color: #ffcc00; text-shadow: 0 0 15px rgba(255, 204, 0, 0.3); }
+        .status-angry { color: #ff4d4d; text-shadow: 0 0 15px rgba(255, 77, 77, 0.3); }
+        .status-love { color: #ff85a2; text-shadow: 0 0 15px rgba(255, 133, 162, 0.3); }
+
+        .loader { 
+            display: none; 
+            margin-top: 25px; 
+            font-weight: 800; 
+            color: #ff9500; 
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            font-size: 12px;
+            animation: blink 0.8s infinite;
+        }
+
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h1 style="margin-bottom: 5px;">MeowVibe 🐾</h1>
-        <p style="opacity: 0.5; margin-bottom: 50px;">Зажми лапку, чтобы услышать мысли</p>
+        <h1>MeowVibe 🐾</h1>
+        <p class="subtitle">Приложи лапу к сенсору</p>
 
         <button class="scan-button" onclick="startScan()">🐾</button>
 
-        <div class="loader" id="loader">СЛУШАЮ МЯУКАНИЕ...</div>
+        <div class="loader" id="loader">Считываю мысли...</div>
 
         <div id="result-card">
             <div id="text-output"></div>
@@ -93,30 +118,47 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        // ТВОИ ФРАЗЫ ТУТ:
-        const catPhrases = [
-            "Голод: Человек, миска пуста уже 5 минут! Это геноцид!",
-            "Злость: Твои поглаживания сейчас лишние. Уйди.",
-            "Любовь: Ладно, ты сегодня неплохо поработал. Можешь почесать за ушком.",
-            "Голод: Неси паштет, или я съем твои кактусы!",
-            "Скука: Почему ты сидишь в телефоне, а не ловишь мне мух?"
+        const phrases = [
+            { text: "Где моя еда, «кожаный»? 😾", type: "hunger" },
+            { text: "Может не будем сегодня голодать?", type: "hunger" },
+            { text: "Я не люблю диеты. Неси паштет!", type: "hunger" },
+            { text: "Как царапну! Руки прочь! 😼", type: "angry" },
+            { text: "Кусь не только слабый бывает!", type: "angry" },
+            { text: "Тыг-дык на голове устроить?", type: "angry" },
+            { text: "Любимый кожаный хозяин... ❤️", type: "love" },
+            { text: "Мои мяу только для тебя.", type: "love" },
+            { text: "Гладь меня полностью! ✨", type: "love" }
         ];
 
         function startScan() {
-            // Сильная вибрация при нажатии
             tg.HapticFeedback.impactOccurred('heavy');
             
-            document.getElementById('result-card').style.display = 'none';
-            document.getElementById('loader').style.display = 'block';
+            const card = document.getElementById('result-card');
+            const loader = document.getElementById('loader');
+            const output = document.getElementById('text-output');
+            
+            card.style.display = 'none';
+            loader.style.display = 'block';
+            
+            // Сброс фона тела
+            document.body.style.background = "#121214";
             
             setTimeout(() => {
-                const randomPhrase = catPhrases[Math.floor(Math.random() * catPhrases.length)];
+                const item = phrases[Math.floor(Math.random() * phrases.length)];
                 
-                document.getElementById('loader').style.display = 'none';
-                document.getElementById('result-card').style.display = 'block';
-                document.getElementById('text-output').innerText = "🐱: " + randomPhrase;
+                loader.style.display = 'none';
+                card.style.display = 'block';
                 
-                // Вибрация успеха при выдаче результата
+                // Установка текста и цвета
+                output.innerText = item.text;
+                output.className = ""; // сброс
+                output.classList.add('status-' + item.type);
+                
+                // Меняем фон в зависимости от настроения (очень мягко)
+                if(item.type === 'angry') document.body.style.background = "#1a0a0a";
+                if(item.type === 'love') document.body.style.background = "#1a0a12";
+                if(item.type === 'hunger') document.body.style.background = "#1a160a";
+                
                 tg.HapticFeedback.notificationOccurred('success');
             }, 1800);
         }
