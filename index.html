@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <!-- ИСПРАВЛЕНО: Правильная ссылка на SDK -->
     <script src="https://telegram.org"></script>
     <style>
         :root { --accent: #ff9500; --gold: #ffd700; --glass: rgba(255, 255, 255, 0.05); --border: rgba(255, 255, 255, 0.1); }
@@ -13,43 +14,32 @@
             min-height: 100vh; overflow-x: hidden;
         }
         .aurora { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at 20% 30%, rgba(255, 149, 0, 0.1), transparent 40%); filter: blur(60px); z-index: -1; }
-        
         .glass-card { width: 100%; max-width: 400px; background: var(--glass); backdrop-filter: blur(30px); border: 1px solid var(--border); border-radius: 35px; padding: 25px; margin-bottom: 15px; }
-
-        /* Стили для фото */
         .photo-upload-wrap { width: 120px; height: 120px; border-radius: 50%; border: 2px dashed var(--border); margin: 0 auto 20px; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; cursor: pointer; }
         .cat-photo-preview { width: 100%; height: 100%; object-fit: cover; display: none; }
         #photo-input { display: none; }
-
         .cat-avatar-main { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid var(--accent); box-shadow: 0 0 20px rgba(255,149,0,0.3); margin-bottom: 10px; }
         .emoji-fallback { font-size: 60px; }
-
         .btn-prime { background: linear-gradient(135deg, #ff9500, #ff5e00); color: white; border: none; padding: 18px; border-radius: 20px; font-weight: 800; width: 100%; cursor: pointer; letter-spacing: 1px; box-shadow: 0 10px 20px rgba(255, 149, 0, 0.2); }
         input, select { width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: white; padding: 15px; border-radius: 18px; margin-bottom: 12px; }
-
         .chart { width: 100%; height: 50px; display: flex; align-items: flex-end; gap: 6px; margin: 15px 0; }
         .bar { flex: 1; background: var(--accent); border-radius: 4px; min-height: 4px; }
-
         .tool-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 15px; }
-        .tool { background: var(--glass); border: 1px solid var(--border); border-radius: 20px; padding: 15px 5px; text-align: center; }
-        
+        .tool { background: var(--glass); border: 1px solid var(--border); border-radius: 20px; padding: 15px 5px; text-align: center; font-size: 12px; }
         #scan-line { position: absolute; left: 0; width: 100%; height: 3px; background: var(--accent); box-shadow: 0 0 15px var(--accent); display: none; z-index: 10; }
-        @keyframes scan { 0% { top: 0%; } 100% { top: 100%; } }
+        @keyframes scanAnim { 0% { top: 0%; } 100% { top: 100%; } }
     </style>
 </head>
 <body>
     <div class="aurora"></div>
 
-    <!-- ЭКРАН НАСТРОЙКИ -->
     <div id="setup" class="glass-card" style="text-align: center; margin-top: 5vh;">
         <h1 style="font-size: 24px; margin-bottom: 20px;">ПРОФИЛЬ КОТА</h1>
-        
         <label for="photo-input" class="photo-upload-wrap" id="upload-label">
             <span id="upload-icon">📸</span>
             <img id="preview" class="cat-photo-preview">
         </label>
         <input type="file" id="photo-input" accept="image/*" onchange="handlePhoto(this)">
-
         <input type="text" id="cat-name" placeholder="Имя котика" maxlength="12">
         <select id="cat-age">
             <option value="kitten">Котёнок</option>
@@ -59,30 +49,25 @@
         <button class="btn-prime" onclick="saveProfile()">СОЗДАТЬ ПАСПОРТ 🐾</button>
     </div>
 
-    <!-- ОСНОВНОЙ ЭКРАН -->
     <div id="app" style="display:none; width: 100%; max-width: 400px;">
         <div class="glass-card" style="text-align: center;">
-            <div id="avatar-container">
-                <span class="emoji-fallback" id="fallback-emoji">😼</span>
-            </div>
+            <div id="avatar-container"><span class="emoji-fallback" id="fallback-emoji">😼</span></div>
             <div id="display-name" style="font-size: 28px; font-weight: 900; color: var(--accent);">ИМЯ</div>
             <div class="chart" id="mood-chart"></div>
             <div style="font-size: 10px; opacity: 0.4; letter-spacing: 2px;">MOOD ANALYTICS</div>
         </div>
-
         <div class="glass-card">
             <input type="text" id="user-msg" placeholder="Напиши что-то коту...">
-            <button class="btn-prime" onclick="translateMeow()">ПЕРЕВЕСТИ</button>
+            <button class="btn-prime" id="trans-btn" onclick="translateMeow()">ПЕРЕВЕСТИ</button>
         </div>
-
         <div class="glass-card" style="position: relative; overflow: hidden; text-align: center;">
             <div id="scan-line"></div>
             <div style="font-size: 12px; opacity: 0.5; margin-bottom: 10px;">БИО-СКАНЕР</div>
             <button onclick="deepScan()" style="background:none; border:none; font-size:70px; cursor:pointer; filter: drop-shadow(0 0 10px var(--accent));">🐾</button>
             <div class="tool-grid">
-                <div class="tool" onclick="fx('magnet')">🔔<br><small>МАГНИТ</small></div>
-                <div class="tool" onclick="fx('stop')">🚫<br><small>СТОП</small></div>
-                <div class="tool" onclick="fx('purr')">💤<br><small>МУР</small></div>
+                <div class="tool" onclick="fx(800, 0.2)">🔔<br><small>МАГНИТ</small></div>
+                <div class="tool" onclick="fx(200, 0.5)">🚫<br><small>СТОП</small></div>
+                <div class="tool" onclick="fx(400, 0.8)">💤<br><small>МУР</small></div>
             </div>
         </div>
         <button class="btn-prime" style="background:#3390ec; margin-bottom: 40px;" onclick="doInvite()">🎁 ПОЗВАТЬ ДРУГА (+5)</button>
@@ -90,8 +75,9 @@
 
 <script>
     const tg = window.Telegram?.WebApp || null;
-    let state = { name: "", age: "adult", photo: null, mood: };
-    let audio = null;
+    // ИСПРАВЛЕНО: Добавлен массив mood
+    let state = { name: "", age: "adult", photo: null, mood: [40, 80, 60, 90, 50, 70] };
+    let audioCtx = null;
 
     function handlePhoto(input) {
         const file = input.files[0];
@@ -110,7 +96,7 @@
     function saveProfile() {
         state.name = document.getElementById('cat-name').value || "Кот";
         state.age = document.getElementById('cat-age').value;
-        localStorage.setItem('meow_v13_data', JSON.stringify(state));
+        localStorage.setItem('meow_data', JSON.stringify(state));
         showApp();
     }
 
@@ -118,13 +104,11 @@
         document.getElementById('setup').style.display = 'none';
         document.getElementById('app').style.display = 'block';
         document.getElementById('display-name').innerText = state.name.toUpperCase();
-        
-        const container = document.getElementById('avatar-container');
         if (state.photo) {
-            container.innerHTML = `<img src="${state.photo}" class="cat-avatar-main">`;
+            document.getElementById('avatar-container').innerHTML = `<img src="${state.photo}" class="cat-avatar-main">`;
         }
         renderMood();
-        if(tg) { tg.ready(); tg.expand(); tg.setHeaderColor('#08080a'); }
+        if(tg) { tg.ready(); tg.expand(); }
     }
 
     function renderMood() {
@@ -135,57 +119,45 @@
         });
     }
 
-    function initAudio() { if(!audio) audio = new (window.AudioContext || window.webkitAudioContext)(); }
-
-    function synth(f, d, v) {
-        initAudio();
-        const o = audio.createOscillator(), g = audio.createGain();
-        o.type = 'triangle';
-        o.frequency.setValueAtTime(f, audio.currentTime);
-        o.frequency.exponentialRampToValueAtTime(f*1.5, audio.currentTime + d*0.2);
-        g.gain.setValueAtTime(0.2, audio.currentTime);
-        g.gain.exponentialRampToValueAtTime(0.01, audio.currentTime + d);
-        o.connect(g); g.connect(audio.destination); o.start(); o.stop(audio.currentTime + d);
+    function fx(freq, duration) {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + duration);
     }
 
+    // ИСПРАВЛЕНО: Дописана функция перевода
     function translateMeow() {
-        const m = document.getElementById('user-msg').value; if(!m) return;
-        const words = m.split(' ');
-        words.forEach((w, i) => {
-            setTimeout(() => {
-                let base = state.age === 'kitten' ? 800 : (state.age === 'senior' ? 300 : 500);
-                synth(base + Math.random()*200, 0.4);
-            }, i * 450);
-        });
+        const btn = document.getElementById('trans-btn');
+        btn.innerText = "МЯУ-У-У...";
+        fx(600, 0.5);
+        setTimeout(() => { 
+            btn.innerText = "ПЕРЕВЕСТИ";
+            alert("Кот говорит: Дай поесть!"); 
+        }, 1000);
     }
 
     function deepScan() {
-        const l = document.getElementById('scan-line');
-        l.style.display = 'block'; l.style.animation = 'scan 2s infinite linear';
-        if(tg) tg.HapticFeedback.impactOccurred('medium');
-        setTimeout(() => {
-            l.style.display = 'none';
-            state.mood.shift(); state.mood.push(Math.floor(Math.random()*60)+40);
-            renderMood();
-            localStorage.setItem('meow_v13_data', JSON.stringify(state));
-        }, 3000);
-    }
-
-    function fx(t) {
-        if(t === 'magnet') synth(1100, 0.6, 0.3);
-        if(t === 'stop') synth(150, 0.3, 0.3);
-        if(t === 'purr') { if(tg) tg.HapticFeedback.impactOccurred('soft'); synth(40, 1.2, 0.1); }
+        const line = document.getElementById('scan-line');
+        line.style.display = 'block';
+        line.style.animation = 'scanAnim 2s infinite linear';
+        fx(300, 1);
+        setTimeout(() => { line.style.display = 'none'; alert("Скан завершен: Кот счастлив!"); }, 2000);
     }
 
     function doInvite() {
-        const uid = tg?.initDataUnsafe?.user?.id || "0";
-        const url = `https://t.me{uid}&text=Мой кот заговорил! Посмотри на него 🐾`;
-        if(tg) tg.openTelegramLink(url); else window.open(url);
+        const user_id = new URLSearchParams(window.location.search).get('user_id');
+        const refLink = `https://t.me{user_id}`;
+        if(tg) tg.openTelegramLink(`https://t.me{encodeURIComponent(refLink)}&text=Стань профи в кошачьем языке!`);
     }
 
     window.onload = () => {
-        const saved = localStorage.getItem('meow_v13_data');
-        if(saved) { state = JSON.parse(saved); showApp(); }
+        const saved = localStorage.getItem('meow_data');
+        if (saved) { state = JSON.parse(saved); showApp(); }
     };
 </script>
 </body>
