@@ -3,18 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <!-- Подключаем скрипт Telegram принудительно -->
+    <!-- ИСПРАВЛЕНО: Правильный путь к скрипту Telegram -->
     <script src="https://telegram.org"></script>
     <style>
         :root { --accent: #ff9500; --bg: #0d0d0f; --glass: rgba(255, 255, 255, 0.05); }
         
-        /* Глобальная блокировка выделения и системных меню */
         * {
             -webkit-touch-callout: none !important;
             -webkit-user-select: none !important;
             user-select: none !important;
             -webkit-tap-highlight-color: transparent !important;
-            touch-action: manipulation; /* Разрешает только клики, блокирует зум и выделение */
+            touch-action: manipulation;
         }
 
         body { 
@@ -31,19 +30,19 @@
             text-align: center; position: relative;
         }
 
-        #laser { position: absolute; left: 0; width: 100%; height: 2px; background: var(--accent); box-shadow: 0 0 15px var(--accent); display: none; pointer-events: none; }
+        #laser { position: absolute; left: 0; width: 100%; height: 2px; background: var(--accent); box-shadow: 0 0 15px var(--accent); display: none; pointer-events: none; z-index: 10; }
         @keyframes scanAnim { 0% { top: 0%; } 100% { top: 100%; } }
 
         .trust-bar { width: 100%; height: 6px; background: #222; border-radius: 10px; margin: 10px 0; overflow: hidden; }
         #trust-fill { width: 50%; height: 100%; background: linear-gradient(90deg, #ff4d4d, var(--accent), #4aff4a); transition: 1s; }
 
-        /* КНОПКА ЛАПА */
         .big-btn { 
             width: 90px; height: 90px; border-radius: 50%; border: none; 
             background: linear-gradient(135deg, #ff9500, #ff5e00); 
             font-size: 40px; cursor: pointer; display: block; margin: 15px auto;
             box-shadow: 0 5px 20px rgba(255,149,0,0.4);
         }
+        .big-btn:active { transform: scale(0.9); }
 
         .social-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; max-width: 320px; margin-top: 20px; }
         .social-btn { 
@@ -74,25 +73,24 @@
     </div>
 
     <div class="social-grid">
-        <!-- Прямые ссылки через <a> для 100% срабатывания -->
         <a id="invite-link" class="social-btn" href="#">➕ ПОЗВАТЬ ДРУГА</a>
         <a id="share-link" class="social-btn share-btn" href="#">📢 ПОДЕЛИТЬСЯ</a>
     </div>
 
 <script>
-    // Проверка инициализации Telegram
     const tg = window.Telegram.WebApp;
-    
+
     function initApp() {
         tg.ready();
         tg.expand();
         
-        // Устанавливаем ссылки для кнопок сразу при загрузке
+        // ИСПРАВЛЕНО: Правильный формат ссылок для кнопок
         const botUser = "MeowVibe_bot";
         const inviteText = encodeURIComponent("Пойми своего кота в MeowVibe! 🐾 Даю бонус доверия за вход!");
-        const inviteUrl = `https://t.me{botUser}/app?startapp=ref_${tg.initDataUnsafe.user?.id || 'user'}`;
+        const userId = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : 'user';
+        const inviteUrl = "https://t.me" + botUser + "/app?startapp=ref_" + userId;
         
-        document.getElementById('invite-link').href = `https://t.me{inviteLink}&text=${inviteText}`;
+        document.getElementById('invite-link').href = "https://t.meshare/url?url=" + encodeURIComponent(inviteUrl) + "&text=" + inviteText;
         
         updateUI();
     }
@@ -119,9 +117,9 @@
             const res = (trust > 60) ? goodPhrases[Math.floor(Math.random()*4)] : badPhrases[Math.floor(Math.random()*4)];
             status.innerText = res;
             
-            // Обновляем ссылку "Поделиться" динамически
-            const shareText = encodeURIComponent(`Мой кот сказал: "${res}" 🐱\nУзнай правду в MeowVibe!`);
-            document.getElementById('share-link').href = `https://t.me{shareText}`;
+            // ИСПРАВЛЕНО: Динамическое обновление кнопки поделиться
+            const shareText = encodeURIComponent("Мой кот сказал: \"" + res + "\" 🐱\nУзнай правду в MeowVibe!");
+            document.getElementById('share-link').href = "https://t.meshare/url?text=" + shareText;
             
             trust = Math.max(10, trust - 15);
             updateUI();
@@ -145,7 +143,6 @@
         else face.innerText = "😼";
     }
 
-    // Запуск
     window.onload = initApp;
 </script>
 </body>
