@@ -5,175 +5,206 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <script src="https://telegram.org"></script>
     <style>
-        :root { --accent: #ff9500; --gold: #ffd700; --glass: rgba(255, 255, 255, 0.07); --glass-border: rgba(255, 255, 255, 0.12); }
-        * { -webkit-touch-callout: none; user-select: none; box-sizing: border-box; outline: none; }
-        body { 
-            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); color: white;
-            font-family: -apple-system, sans-serif; display: flex; flex-direction: column; align-items: center;
-            margin: 0; padding: 15px; min-height: 100vh; overflow-x: hidden;
+        :root { 
+            --accent: #ff9500; 
+            --gold: #ffd700;
+            --bg: #08080a;
+            --glass: rgba(255, 255, 255, 0.03);
+            --border: rgba(255, 255, 255, 0.08);
         }
 
-        .glass-card { width: 100%; max-width: 360px; background: var(--glass); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 25px; padding: 15px; margin-bottom: 12px; }
-        
-        /* Блок Достижений */
-        .achievements-grid { display: flex; gap: 10px; overflow-x: auto; padding: 5px 0; scrollbar-width: none; }
-        .ach-item { min-width: 70px; height: 70px; background: rgba(0,0,0,0.3); border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 25px; border: 1px solid transparent; grayscale: 1; opacity: 0.4; transition: 0.5s; }
-        .ach-unlocked { grayscale: 0; opacity: 1; border-color: var(--gold); box-shadow: 0 0 10px rgba(255,215,0,0.3); }
+        * { -webkit-touch-callout: none; user-select: none; box-sizing: border-box; outline: none; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
 
-        .btn-main { background: linear-gradient(135deg, #ff9500, #ff5e00); color: white; border: none; padding: 14px; border-radius: 15px; font-weight: 700; width: 100%; cursor: pointer; }
-        input { width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); color: white; padding: 12px; border-radius: 12px; margin-bottom: 10px; }
+        body { 
+            background: var(--bg); color: white;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+            display: flex; flex-direction: column; align-items: center; margin: 0; padding: 20px;
+            min-height: 100vh; overflow-x: hidden;
+        }
 
-        #toast { position: fixed; bottom: 80px; background: var(--gold); color: black; padding: 10px 20px; border-radius: 20px; font-weight: bold; transform: translateY(200px); transition: 0.5s; z-index: 1000; }
-        
-        .mood-chart { width: 100%; height: 40px; display: flex; align-items: flex-end; gap: 4px; }
-        .mood-bar { flex: 1; background: var(--accent); border-radius: 3px; min-height: 2px; }
+        /* Анимированный живой фон (Aurora) */
+        .aurora {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at 20% 30%, rgba(255, 149, 0, 0.15), transparent 40%),
+                        radial-gradient(circle at 80% 70%, rgba(51, 144, 236, 0.1), transparent 40%);
+            filter: blur(80px); z-index: -1; animation: auroraFlow 20s infinite alternate;
+        }
+        @keyframes auroraFlow { 0% { transform: scale(1); } 100% { transform: scale(1.2); } }
+
+        .glass-card {
+            width: 100%; max-width: 400px; background: var(--glass);
+            backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+            border: 1px solid var(--border); border-radius: 35px;
+            padding: 25px; margin-bottom: 20px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .setup-screen { text-align: center; margin-top: 12vh; animation: slideUp 0.8s ease; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+
+        h1 { font-size: 32px; font-weight: 800; letter-spacing: -1.5px; margin-bottom: 10px; background: linear-gradient(180deg, #fff 0%, #888 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+        input, select {
+            width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+            color: white; padding: 18px; border-radius: 22px; font-size: 16px; margin-bottom: 15px;
+        }
+
+        .btn-prime {
+            background: linear-gradient(135deg, #ff9500, #ff5e00); color: white;
+            border: none; padding: 20px; border-radius: 24px; font-weight: 800;
+            width: 100%; cursor: pointer; text-transform: uppercase; letter-spacing: 2px;
+            box-shadow: 0 10px 30px rgba(255, 149, 0, 0.3);
+        }
+        .btn-prime:active { transform: scale(0.95); filter: brightness(1.1); }
+
+        .cat-hero { font-size: 90px; filter: drop-shadow(0 0 20px rgba(255,255,255,0.2)); margin: 20px 0; display: inline-block; }
+        .is-talking { animation: catBounce 0.3s infinite; }
+        @keyframes catBounce { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1) rotate(3deg); } }
+
+        /* Трекер */
+        .chart-wrap { background: rgba(0,0,0,0.3); border-radius: 24px; padding: 20px; margin: 15px 0; border: 1px solid var(--border); }
+        .chart { width: 100%; height: 60px; display: flex; align-items: flex-end; gap: 8px; }
+        .bar { flex: 1; background: var(--accent); border-radius: 6px; min-height: 4px; box-shadow: 0 0 15px rgba(255,149,0,0.3); }
+
+        /* Кнопки инструментов */
+        .tool-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-top: 20px; }
+        .tool { background: var(--glass); border: 1px solid var(--border); border-radius: 25px; padding: 20px 10px; text-align: center; cursor: pointer; }
+        .tool:active { background: var(--accent); }
+        .tool span { font-size: 28px; display: block; margin-bottom: 5px; }
+
+        #scanner-line { 
+            position: absolute; left: 0; width: 100%; height: 4px; 
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            box-shadow: 0 0 25px var(--accent); display: none; z-index: 10;
+        }
+        @keyframes scanning { 0% { top: 0%; } 100% { top: 100%; } }
+
+        .app-screen { display: none; width: 100%; max-width: 400px; animation: slideUp 0.6s ease; }
     </style>
 </head>
 <body>
+    <div class="aurora"></div>
 
-    <div id="toast">🏆 ДОСТИЖЕНИЕ ПОЛУЧЕНО!</div>
-
-    <div id="setup" class="glass-card" style="margin-top: 20vh; text-align: center;">
-        <h2 style="color:var(--accent)">КТО ТВОЙ КОТ?</h2>
-        <input type="text" id="cat-name" placeholder="Имя кота">
-        <select id="cat-age" style="width:100%; padding:10px; border-radius:10px; background:#1a1a1c; color:white; margin-bottom:10px;">
-            <option value="kitten">Котёнок</option>
-            <option value="adult" selected>Взрослый</option>
-            <option value="senior">Мудрый</option>
+    <!-- START SCREEN -->
+    <div id="setup" class="glass-card setup-screen">
+        <div class="cat-hero">😼</div>
+        <h1>MEOWVIBE PRO</h1>
+        <p style="opacity: 0.5; font-size: 14px; margin-bottom: 30px;">Синхронизация сознания с вашим питомцем</p>
+        <input type="text" id="cat-name" placeholder="Имя питомца" maxlength="10">
+        <select id="cat-age">
+            <option value="kitten">Котёнок (High Pitch)</option>
+            <option value="adult" selected>Взрослый кот (Middle)</option>
+            <option value="senior">Мудрый кот (Deep)</option>
         </select>
-        <button class="btn-main" onclick="saveProfile()">НАЧАТЬ 🐾</button>
+        <button class="btn-prime" onclick="startApp()">СОЗДАТЬ СВЯЗЬ</button>
     </div>
 
-    <div id="app" style="display:none; width:100%; max-width:360px;">
-        <!-- Достижения -->
-        <div class="glass-card">
-            <div style="font-size: 10px; opacity: 0.6; margin-bottom: 8px;">ВАШИ МЕДАЛИ</div>
-            <div class="achievements-grid">
-                <div class="ach-item" id="ach-first" title="Первый скан">🎯</div>
-                <div class="ach-item" id="ach-ref" title="Пригласил друга">🤝</div>
-                <div class="ach-item" id="ach-night" title="Ночной тыгдык">🌙</div>
-                <div class="ach-item" id="ach-pro" title="Мастер перевода">🗣️</div>
+    <!-- MAIN APP -->
+    <div id="app" class="app-screen">
+        <div class="glass-card" style="text-align: center; position: relative; overflow: hidden;">
+            <div id="cat-face" class="cat-hero">😼</div>
+            <div id="display-name" style="font-size: 34px; font-weight: 900; letter-spacing: -1px; color: var(--accent);">КОТ</div>
+            <div class="chart-wrap">
+                <div class="chart" id="mood-chart"></div>
+                <div style="font-size: 10px; opacity: 0.4; letter-spacing: 3px; margin-top: 15px; font-weight: bold;">NEURAL MOOD TRACKER</div>
             </div>
         </div>
 
-        <div class="glass-card" style="text-align: center;">
-            <div id="display-name" style="font-size: 22px; font-weight: 900; color: var(--accent);"></div>
-            <div class="mood-chart" id="chart"></div>
-            <div style="font-size: 12px; margin-top:5px;" id="limits-info">Лимиты: 5 / 3</div>
-        </div>
-
         <div class="glass-card">
-            <input type="text" id="user-msg" placeholder="Скажи коту что-нибудь...">
-            <button class="btn-main" onclick="translateWithAch()">ПЕРЕВЕСТИ</button>
+            <div style="font-size: 11px; font-weight: 800; color: var(--accent); margin-bottom: 15px; letter-spacing: 1px;">SENSORY TRANSLATOR AI</div>
+            <input type="text" id="user-msg" placeholder="Введите фразу...">
+            <button class="btn-prime" onclick="aiTranslate()">ГОВОРИТЬ С КОТОМ</button>
         </div>
 
-        <div style="text-align: center; margin: 20px 0;">
-            <button onclick="deepScanWithAch()" style="background:none; border:none; font-size:60px; filter: drop-shadow(0 0 10px var(--accent)); cursor:pointer;">🐾</button>
-            <div id="status" style="color:var(--accent); font-weight:bold; margin-top:10px;">ГОТОВ</div>
+        <div class="glass-card" style="position: relative; overflow: hidden; text-align: center;">
+            <div id="scanner-line"></div>
+            <div id="status" style="font-weight: 800; opacity: 0.5; font-size: 12px; margin-bottom: 10px;">BIO-SCANNER ACTIVE</div>
+            <button onclick="runBioScan()" style="background:none; border:none; font-size:80px; cursor:pointer; filter: drop-shadow(0 0 15px var(--accent));">🐾</button>
+            
+            <div class="tool-grid">
+                <div class="tool" onclick="fx('magnet')"><span>🔔</span><small>МАГНИТ</small></div>
+                <div class="tool" onclick="fx('stop')"><span>🚫</span><small>СТОП</small></div>
+                <div class="tool" onclick="fx('purr')"><span>💤</span><small>МУР</small></div>
+            </div>
         </div>
-        
-        <button class="btn-main" style="background:#3390ec;" onclick="doInvite()">🎁 ПОЗВАТЬ ДРУГА (+5 БОНУСОВ)</button>
+
+        <button class="btn-prime" style="background: rgba(255,255,255,0.05); box-shadow: none; border: 1px solid var(--border); margin-bottom: 50px;" onclick="refShare()">🎁 ПРИГЛАСИТЬ ДРУГА (+5 БОНУСОВ)</button>
     </div>
 
 <script>
     const tg = window.Telegram?.WebApp || null;
-    const BOT_USERNAME = "MeowVibe_bot";
-    const urlParams = new URLSearchParams(window.location.search);
-    const bonusFromRef = parseInt(urlParams.get('bonus')) || 0;
+    let audio = null;
+    let state = { name: "", age: "adult", mood: };
 
-    let state = {
-        name: "", age: "adult",
-        transLeft: 5, toolsLeft: 3,
-        moodHistory: [50, 60, 45, 70, 55, 80, 50],
-        achieved: [], // Список id полученных ачивок
-        transCount: 0
-    };
-
-    function showToast(text) {
-        const t = document.getElementById('toast');
-        t.innerText = text;
-        t.style.transform = "translateY(0)";
-        setTimeout(() => t.style.transform = "translateY(200px)", 3000);
-    }
-
-    function unlockAchievement(id, bonus = 5) {
-        if (!state.achieved.includes(id)) {
-            state.achieved.push(id);
-            state.transLeft += bonus;
-            state.toolsLeft += bonus;
-            showToast("🏆 ОТКРЫТО: " + id + " (+5 бонусов!)");
-            saveState();
-            updateUI();
-        }
-    }
-
-    function saveProfile() {
+    function startApp() {
         state.name = document.getElementById('cat-name').value || "Кот";
         state.age = document.getElementById('cat-age').value;
-        saveState();
-        showApp();
-    }
-
-    function showApp() {
         document.getElementById('setup').style.display = 'none';
         document.getElementById('app').style.display = 'block';
         document.getElementById('display-name').innerText = state.name.toUpperCase();
-        if (bonusFromRef > 0) {
-            unlockAchievement('ДРУГ');
-            // Очищаем URL
-            window.history.replaceState({}, '', window.location.pathname);
-        }
-        updateUI();
-        if(tg) { tg.ready(); tg.expand(); }
+        renderMood();
+        if(tg) { tg.ready(); tg.expand(); tg.setHeaderColor('#08080a'); }
     }
 
-    function updateUI() {
-        document.getElementById('limits-info').innerText = `Переводы: ${state.transLeft} | Хуки: ${state.toolsLeft}`;
-        state.achieved.forEach(id => {
-            const map = {'СКАУТ': 'ach-first', 'ДРУГ': 'ach-ref', 'ПОЛУНОЧНИК': 'ach-night', 'ПРОФИ': 'ach-pro'};
-            if(map[id]) document.getElementById(map[id]).classList.add('ach-unlocked');
-        });
-        const chart = document.getElementById('chart');
-        chart.innerHTML = "";
-        state.moodHistory.forEach(v => {
-            const b = document.createElement('div'); b.className = 'mood-bar'; b.style.height = v + "%"; chart.appendChild(b);
+    function renderMood() {
+        const c = document.getElementById('mood-chart'); c.innerHTML = "";
+        state.mood.forEach(v => {
+            const b = document.createElement('div'); b.className = 'bar';
+            b.style.height = v + "%"; c.appendChild(b);
         });
     }
 
-    function deepScanWithAch() {
-        unlockAchievement('СКАУТ');
-        const now = new Date().getHours();
-        if (now >= 0 && now < 5) unlockAchievement('ПОЛУНОЧНИК');
-        
-        document.getElementById('status').innerText = "СИНХРОНИЗАЦИЯ...";
-        if(tg) tg.HapticFeedback.impactOccurred('heavy');
+    function initAudio() { if(!audio) audio = new (window.AudioContext || window.webkitAudioContext)(); }
+
+    function synth(f, d, v, type='triangle') {
+        initAudio();
+        const o = audio.createOscillator(), g = audio.createGain();
+        o.type = type;
+        o.frequency.setValueAtTime(f, audio.currentTime);
+        o.frequency.exponentialRampToValueAtTime(f*1.6, audio.currentTime + d*0.2);
+        o.frequency.linearRampToValueAtTime(f*0.8, audio.currentTime + d);
+        g.gain.setValueAtTime(0, audio.currentTime);
+        g.gain.linearRampToValueAtTime(v, audio.currentTime + 0.05);
+        g.gain.exponentialRampToValueAtTime(0.01, audio.currentTime + d);
+        o.connect(g); g.connect(audio.destination); o.start(); o.stop(audio.currentTime + d);
+    }
+
+    function aiTranslate() {
+        const m = document.getElementById('user-msg').value; if(!m) return;
+        const words = m.split(' ');
+        const face = document.getElementById('cat-face');
+        words.forEach((w, i) => {
+            setTimeout(() => {
+                face.classList.add('is-talking');
+                let base = state.age === 'kitten' ? 850 : (state.age === 'senior' ? 300 : 500);
+                synth(base + Math.random()*200, 0.4);
+                setTimeout(() => face.classList.remove('is-talking'), 300);
+            }, i * 500);
+        });
+    }
+
+    function runBioScan() {
+        const l = document.getElementById('scanner-line');
+        l.style.display = 'block'; l.style.animation = 'scanning 2s infinite linear';
+        let b = 0; const i = setInterval(() => { if(tg) tg.HapticFeedback.impactOccurred('medium'); b++; if(b>10) clearInterval(i); }, 400);
         setTimeout(() => {
-            state.moodHistory.shift(); state.moodHistory.push(Math.floor(Math.random()*60)+40);
-            document.getElementById('status').innerText = "ОК ✅";
-            saveState(); updateUI();
-        }, 2000);
+            l.style.display = 'none';
+            state.mood.shift(); state.mood.push(Math.floor(Math.random()*60)+40);
+            renderMood(); if(tg) tg.HapticFeedback.notificationOccurred('success');
+        }, 4000);
     }
 
-    function translateWithAch() {
-        if(state.transLeft <= 0) return tg?.showAlert("Лимиты исчерпаны! Пригласи друга или купи Stars.");
-        state.transLeft--;
-        state.transCount++;
-        if(state.transCount >= 10) unlockAchievement('ПРОФИ');
-        saveState(); updateUI();
-        // Тут звук мяу (из прошлых кодов)
+    function fx(t) {
+        if(t === 'magnet') synth(1100, 0.7, 0.3, 'sine');
+        if(t === 'stop') synth(150, 0.3, 0.4, 'sawtooth');
+        if(t === 'purr') { if(tg) tg.HapticFeedback.impactOccurred('soft'); synth(40, 1.5, 0.2, 'sine'); }
     }
 
-    function doInvite() {
-        const userId = tg?.initDataUnsafe?.user?.id || "0";
-        const url = `https://t.me{BOT_USERNAME}?start=ref${userId}&text=${encodeURIComponent("Узнай мысли своего кота! 🐾")}`;
+    function refShare() {
+        const uid = tg?.initDataUnsafe?.user?.id || "0";
+        const url = `https://t.me{uid}&text=Мой кот заговорил! Попробуй наш нейро-сканер 🐾`;
         if(tg) tg.openTelegramLink(url); else window.open(url);
     }
-
-    function saveState() { localStorage.setItem('meow_v12_state', JSON.stringify(state)); }
-    window.onload = () => {
-        const saved = localStorage.getItem('meow_v12_state');
-        if(saved) { state = JSON.parse(saved); showApp(); }
-    };
 </script>
 </body>
 </html>
