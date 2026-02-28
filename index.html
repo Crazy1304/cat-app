@@ -5,156 +5,112 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <script src="https://telegram.org"></script>
     <style>
-        :root { 
-            --accent: #ff9500; 
-            --gold: #ffd700;
-            --glass: rgba(255, 255, 255, 0.07);
-            --glass-border: rgba(255, 255, 255, 0.12);
-        }
-
+        :root { --accent: #ff9500; --gold: #ffd700; --glass: rgba(255, 255, 255, 0.07); --glass-border: rgba(255, 255, 255, 0.12); }
         * { -webkit-touch-callout: none; user-select: none; box-sizing: border-box; outline: none; }
-
         body { 
-            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-            color: white; font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-            display: flex; flex-direction: column; align-items: center; margin: 0; padding: 20px;
-            min-height: 100vh; overflow-x: hidden; position: relative;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); color: white;
+            font-family: -apple-system, sans-serif; display: flex; flex-direction: column; align-items: center;
+            margin: 0; padding: 15px; min-height: 100vh; overflow-x: hidden;
         }
 
-        /* Анимированный фон */
-        .bg-blob {
-            position: fixed; width: 300px; height: 300px; 
-            background: var(--accent); filter: blur(80px); opacity: 0.15;
-            border-radius: 50%; z-index: -1; animation: float 15s infinite alternate;
-        }
-        .bg-blob.blue { background: #3390ec; left: -100px; top: -100px; }
-        .bg-blob.orange { bottom: -100px; right: -100px; animation-delay: -5s; }
-        @keyframes float { 0% { transform: translate(0,0); } 100% { transform: translate(50px, 100px); } }
-
-        .glass-card {
-            width: 100%; max-width: 360px; background: var(--glass);
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border); border-radius: 28px;
-            padding: 20px; margin-bottom: 15px; box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-        }
-
-        .setup-screen { display: block; text-align: center; margin-top: 10vh; }
-        .app-screen { display: none; width: 100%; max-width: 360px; }
-
-        input, select {
-            width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border);
-            color: white; padding: 14px; border-radius: 16px; margin-bottom: 12px; font-size: 15px;
-        }
-
-        .btn-main {
-            background: linear-gradient(135deg, #ff9500, #ff5e00); color: white;
-            border: none; padding: 16px; border-radius: 18px; font-weight: 700;
-            width: 100%; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 15px rgba(255,149,0,0.3);
-        }
-        .btn-main:active { transform: scale(0.96); }
-        .btn-premium { background: linear-gradient(135deg, #ffd700, #ff9500); color: black; margin-top: 10px; }
-
-        .mood-chart {
-            width: 100%; height: 50px; display: flex; align-items: flex-end; gap: 6px; 
-            margin: 10px 0; padding: 0 5px; background: rgba(255,255,255,0.03); border-radius: 10px;
-        }
-        .mood-bar { flex: 1; background: var(--accent); border-radius: 4px; min-height: 4px; transition: 0.8s; }
-
-        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin: 15px 0; }
-        .tool-btn { 
-            background: rgba(255,255,255,0.05); border-radius: 20px; padding: 15px 5px; 
-            text-align: center; border: 1px solid var(--glass-border); position: relative;
-        }
-        .lock { position: absolute; top: -5px; right: -5px; font-size: 12px; display: none; }
-
-        .limit-badge { font-size: 10px; color: var(--accent); font-weight: bold; margin-bottom: 5px; display: block; }
+        .glass-card { width: 100%; max-width: 360px; background: var(--glass); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 25px; padding: 15px; margin-bottom: 12px; }
         
-        .oracle-box {
-            background: rgba(255, 215, 0, 0.1); border: 1px solid var(--gold);
-            border-radius: 20px; padding: 15px; margin-top: 15px; display: none;
-        }
+        /* Блок Достижений */
+        .achievements-grid { display: flex; gap: 10px; overflow-x: auto; padding: 5px 0; scrollbar-width: none; }
+        .ach-item { min-width: 70px; height: 70px; background: rgba(0,0,0,0.3); border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 25px; border: 1px solid transparent; grayscale: 1; opacity: 0.4; transition: 0.5s; }
+        .ach-unlocked { grayscale: 0; opacity: 1; border-color: var(--gold); box-shadow: 0 0 10px rgba(255,215,0,0.3); }
 
-        #scan-line { 
-            position: absolute; left: 0; width: 100%; height: 2px; 
-            background: var(--accent); box-shadow: 0 0 20px var(--accent); 
-            display: none; z-index: 10; top: 0;
-        }
-        @keyframes scanMove { 0% { top: 0%; } 100% { top: 100%; } }
+        .btn-main { background: linear-gradient(135deg, #ff9500, #ff5e00); color: white; border: none; padding: 14px; border-radius: 15px; font-weight: 700; width: 100%; cursor: pointer; }
+        input { width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); color: white; padding: 12px; border-radius: 12px; margin-bottom: 10px; }
+
+        #toast { position: fixed; bottom: 80px; background: var(--gold); color: black; padding: 10px 20px; border-radius: 20px; font-weight: bold; transform: translateY(200px); transition: 0.5s; z-index: 1000; }
+        
+        .mood-chart { width: 100%; height: 40px; display: flex; align-items: flex-end; gap: 4px; }
+        .mood-bar { flex: 1; background: var(--accent); border-radius: 3px; min-height: 2px; }
     </style>
 </head>
 <body>
 
-    <div class="bg-blob blue"></div>
-    <div class="bg-blob orange"></div>
+    <div id="toast">🏆 ДОСТИЖЕНИЕ ПОЛУЧЕНО!</div>
 
-    <!-- ЭКРАН НАСТРОЙКИ -->
-    <div id="setup" class="setup-screen glass-card">
-        <h2 style="color:var(--accent); margin-bottom: 20px;">ПРОФИЛЬ КОТА</h2>
-        <input type="text" id="cat-name" placeholder="Кличка питомца">
-        <select id="cat-age">
-            <option value="kitten">Котёнок (писклявый)</option>
-            <option value="adult" selected>Взрослый (стандарт)</option>
-            <option value="senior">Мудрый (басовитый)</option>
+    <div id="setup" class="glass-card" style="margin-top: 20vh; text-align: center;">
+        <h2 style="color:var(--accent)">КТО ТВОЙ КОТ?</h2>
+        <input type="text" id="cat-name" placeholder="Имя кота">
+        <select id="cat-age" style="width:100%; padding:10px; border-radius:10px; background:#1a1a1c; color:white; margin-bottom:10px;">
+            <option value="kitten">Котёнок</option>
+            <option value="adult" selected>Взрослый</option>
+            <option value="senior">Мудрый</option>
         </select>
-        <select id="cat-temper">
-            <option value="1">Ласковый мурлыка</option>
-            <option value="2">Ночной тыгдык</option>
-            <option value="3">Маленький тиран</option>
-        </select>
-        <button class="btn-main" onclick="saveProfile()">СОЗДАТЬ ПАСПОРТ 🐾</button>
+        <button class="btn-main" onclick="saveProfile()">НАЧАТЬ 🐾</button>
     </div>
 
-    <!-- ОСНОВНОЙ ЭКРАН -->
-    <div id="app" class="app-screen">
+    <div id="app" style="display:none; width:100%; max-width:360px;">
+        <!-- Достижения -->
+        <div class="glass-card">
+            <div style="font-size: 10px; opacity: 0.6; margin-bottom: 8px;">ВАШИ МЕДАЛИ</div>
+            <div class="achievements-grid">
+                <div class="ach-item" id="ach-first" title="Первый скан">🎯</div>
+                <div class="ach-item" id="ach-ref" title="Пригласил друга">🤝</div>
+                <div class="ach-item" id="ach-night" title="Ночной тыгдык">🌙</div>
+                <div class="ach-item" id="ach-pro" title="Мастер перевода">🗣️</div>
+            </div>
+        </div>
+
         <div class="glass-card" style="text-align: center;">
-            <div id="display-name" style="font-size: 24px; font-weight: 900; color: var(--accent);">КОТ</div>
+            <div id="display-name" style="font-size: 22px; font-weight: 900; color: var(--accent);"></div>
             <div class="mood-chart" id="chart"></div>
-            <div style="font-size: 10px; opacity: 0.5;">ТРЕКЕР НАСТРОЕНИЯ (НЕДЕЛЯ)</div>
+            <div style="font-size: 12px; margin-top:5px;" id="limits-info">Лимиты: 5 / 3</div>
         </div>
 
         <div class="glass-card">
-            <span class="limit-badge" id="trans-limit">Бесплатно: 5 переводов</span>
-            <input type="text" id="user-msg" placeholder="Текст для перевода в МЯУ...">
-            <button class="btn-main" onclick="translateMeow()">ОЗВУЧИТЬ</button>
+            <input type="text" id="user-msg" placeholder="Скажи коту что-нибудь...">
+            <button class="btn-main" onclick="translateWithAch()">ПЕРЕВЕСТИ</button>
         </div>
 
-        <div class="glass-card" style="position: relative; overflow: hidden;">
-            <div id="scan-line"></div>
-            <div id="status" style="font-weight: bold; color: var(--accent); margin-bottom: 15px;">БИО-СЕТКА ГОТОВА</div>
-            <button onclick="deepScan()" style="background:none; border:none; font-size:60px; cursor:pointer; filter: drop-shadow(0 0 10px var(--accent));">🐾</button>
-            
-            <div class="grid-3">
-                <div class="tool-btn" onclick="useTool('magnet')">🍗<br><small>ПРИЗЫВ</small><div class="lock" id="l1">🔒</div></div>
-                <div class="tool-btn" onclick="useTool('stop')">🚫<br><small>СТОП</small><div class="lock" id="l2">🔒</div></div>
-                <div class="tool-btn" onclick="useTool('purr')">💤<br><small>МУР</small><div class="lock" id="l3">🔒</div></div>
-            </div>
-            <span class="limit-badge" id="tools-limit">Бесплатно: 3 хука</span>
+        <div style="text-align: center; margin: 20px 0;">
+            <button onclick="deepScanWithAch()" style="background:none; border:none; font-size:60px; filter: drop-shadow(0 0 10px var(--accent)); cursor:pointer;">🐾</button>
+            <div id="status" style="color:var(--accent); font-weight:bold; margin-top:10px;">ГОТОВ</div>
         </div>
-
-        <button class="btn-main btn-premium" id="premium-btn" onclick="buyPremium()">🔓 UNLIMITED + ОРАКУЛ (50 ⭐)</button>
-
-        <div class="oracle-box" id="oracle">
-            <div style="color: var(--gold); font-weight: bold; font-size: 12px; text-transform: uppercase;">🔮 Оракул Мяу</div>
-            <div id="oracle-text" style="font-size: 14px; margin-top: 8px; line-height: 1.4;"></div>
-        </div>
+        
+        <button class="btn-main" style="background:#3390ec;" onclick="doInvite()">🎁 ПОЗВАТЬ ДРУГА (+5 БОНУСОВ)</button>
     </div>
 
 <script>
     const tg = window.Telegram?.WebApp || null;
-    let audioCtx = null;
+    const BOT_USERNAME = "MeowVibe_bot";
+    const urlParams = new URLSearchParams(window.location.search);
+    const bonusFromRef = parseInt(urlParams.get('bonus')) || 0;
+
     let state = {
-        name: "", age: "adult", 
-        isPremium: false,
+        name: "", age: "adult",
         transLeft: 5, toolsLeft: 3,
-        moodHistory: [50, 50, 50, 50, 50, 50, 50]
+        moodHistory: [50, 60, 45, 70, 55, 80, 50],
+        achieved: [], // Список id полученных ачивок
+        transCount: 0
     };
 
-    function initAudio() { if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+    function showToast(text) {
+        const t = document.getElementById('toast');
+        t.innerText = text;
+        t.style.transform = "translateY(0)";
+        setTimeout(() => t.style.transform = "translateY(200px)", 3000);
+    }
+
+    function unlockAchievement(id, bonus = 5) {
+        if (!state.achieved.includes(id)) {
+            state.achieved.push(id);
+            state.transLeft += bonus;
+            state.toolsLeft += bonus;
+            showToast("🏆 ОТКРЫТО: " + id + " (+5 бонусов!)");
+            saveState();
+            updateUI();
+        }
+    }
 
     function saveProfile() {
-        state.name = document.getElementById('cat-name').value || "Снежок";
+        state.name = document.getElementById('cat-name').value || "Кот";
         state.age = document.getElementById('cat-age').value;
-        localStorage.setItem('meow_v11_state', JSON.stringify(state));
+        saveState();
         showApp();
     }
 
@@ -162,123 +118,60 @@
         document.getElementById('setup').style.display = 'none';
         document.getElementById('app').style.display = 'block';
         document.getElementById('display-name').innerText = state.name.toUpperCase();
+        if (bonusFromRef > 0) {
+            unlockAchievement('ДРУГ');
+            // Очищаем URL
+            window.history.replaceState({}, '', window.location.pathname);
+        }
         updateUI();
-        if(tg) { tg.ready(); tg.expand(); tg.setHeaderColor('#0f0c29'); }
+        if(tg) { tg.ready(); tg.expand(); }
     }
 
     function updateUI() {
-        document.getElementById('trans-limit').innerText = state.isPremium ? "PREMIUM ACTIVE" : `Осталось переводов: ${state.transLeft}`;
-        document.getElementById('tools-limit').innerText = state.isPremium ? "PREMIUM ACTIVE" : `Осталось хуков: ${state.toolsLeft}`;
-        
-        if(state.isPremium) {
-            document.getElementById('premium-btn').style.display = 'none';
-            showOracle();
-        } else if(state.toolsLeft <= 0) {
-            document.getElementById('l1').style.display = document.getElementById('l2').style.display = document.getElementById('l3').style.display = 'block';
-        }
-        renderChart();
-    }
-
-    function renderChart() {
+        document.getElementById('limits-info').innerText = `Переводы: ${state.transLeft} | Хуки: ${state.toolsLeft}`;
+        state.achieved.forEach(id => {
+            const map = {'СКАУТ': 'ach-first', 'ДРУГ': 'ach-ref', 'ПОЛУНОЧНИК': 'ach-night', 'ПРОФИ': 'ach-pro'};
+            if(map[id]) document.getElementById(map[id]).classList.add('ach-unlocked');
+        });
         const chart = document.getElementById('chart');
         chart.innerHTML = "";
         state.moodHistory.forEach(v => {
-            const b = document.createElement('div');
-            b.className = 'mood-bar';
-            b.style.height = v + "%";
-            chart.appendChild(b);
+            const b = document.createElement('div'); b.className = 'mood-bar'; b.style.height = v + "%"; chart.appendChild(b);
         });
     }
 
-    function synthMeow(f, d, v) {
-        initAudio();
-        const o = audioCtx.createOscillator(), g = audioCtx.createGain();
-        o.type = 'triangle';
-        o.frequency.setValueAtTime(f, audioCtx.currentTime);
-        o.frequency.exponentialRampToValueAtTime(f*1.5, audioCtx.currentTime + d*0.2);
-        o.frequency.linearRampToValueAtTime(f*0.8, audioCtx.currentTime + d);
-        g.gain.setValueAtTime(0, audioCtx.currentTime);
-        g.gain.linearRampToValueAtTime(v, audioCtx.currentTime + 0.05);
-        g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + d);
-        o.connect(g); g.connect(audioCtx.destination);
-        o.start(); o.stop(audioCtx.currentTime + d);
-    }
-
-    function translateMeow() {
-        if(!state.isPremium && state.transLeft <= 0) return buyPremium();
-        const msg = document.getElementById('user-msg').value;
-        if(!msg) return;
+    function deepScanWithAch() {
+        unlockAchievement('СКАУТ');
+        const now = new Date().getHours();
+        if (now >= 0 && now < 5) unlockAchievement('ПОЛУНОЧНИК');
         
-        if(!state.isPremium) state.transLeft--;
-        localStorage.setItem('meow_v11_state', JSON.stringify(state));
-        updateUI();
-
-        let freq = state.age === 'kitten' ? 800 : (state.age === 'senior' ? 250 : 450);
-        synthMeow(freq, 0.4, 0.2);
-    }
-
-    function useTool(type) {
-        if(!state.isPremium && state.toolsLeft <= 0) return buyPremium();
-        if(!state.isPremium) state.toolsLeft--;
-        localStorage.setItem('meow_v11_state', JSON.stringify(state));
-        updateUI();
-
-        if(type === 'magnet') synthMeow(600, 0.5, 0.3);
-        if(type === 'stop') synthMeow(150, 0.2, 0.2, 'sawtooth');
-        if(type === 'purr') {
-            tg?.HapticFeedback.impactOccurred('soft');
-            synthMeow(40, 1.0, 0.1, 'sine');
-        }
-    }
-
-    function deepScan() {
-        const line = document.getElementById('scan-line');
-        const status = document.getElementById('status');
-        line.style.display = 'block';
-        line.style.animation = 'scanMove 2s infinite linear';
-        status.innerText = "СИНХРОНИЗАЦИЯ ПУЛЬСА...";
-
-        let beats = 0;
-        const heart = setInterval(() => {
-            tg?.HapticFeedback.impactOccurred('medium');
-            beats++; if(beats > 8) clearInterval(heart);
-        }, 450);
-
+        document.getElementById('status').innerText = "СИНХРОНИЗАЦИЯ...";
+        if(tg) tg.HapticFeedback.impactOccurred('heavy');
         setTimeout(() => {
-            line.style.display = 'none';
-            const newMood = Math.floor(Math.random() * 60) + 40;
-            state.moodHistory.shift();
-            state.moodHistory.push(newMood);
-            localStorage.setItem('meow_v11_state', JSON.stringify(state));
-            updateUI();
-            status.innerText = "АНАЛИЗ ЗАВЕРШЕН ✅";
-        }, 4000);
+            state.moodHistory.shift(); state.moodHistory.push(Math.floor(Math.random()*60)+40);
+            document.getElementById('status').innerText = "ОК ✅";
+            saveState(); updateUI();
+        }, 2000);
     }
 
-    function showOracle() {
-        const preds = [
-            "Сегодня миска будет полна до краев!", "Остерегайся пылесоса, он замышляет неладное.",
-            "Время для идеального кусь настанет в 18:00.", "Твой человек сегодня особенно добр.",
-            "Звезды сулят тебе самую мягкую коробку в мире."
-        ];
-        document.getElementById('oracle').style.display = 'block';
-        const day = new Date().getDate() % preds.length;
-        document.getElementById('oracle-text').innerText = preds[day];
+    function translateWithAch() {
+        if(state.transLeft <= 0) return tg?.showAlert("Лимиты исчерпаны! Пригласи друга или купи Stars.");
+        state.transLeft--;
+        state.transCount++;
+        if(state.transCount >= 10) unlockAchievement('ПРОФИ');
+        saveState(); updateUI();
+        // Тут звук мяу (из прошлых кодов)
     }
 
-    function buyPremium() {
-        tg?.showConfirm("Разблокировать все функции и Оракула за 50 ⭐?", (ok) => {
-            if(ok) {
-                state.isPremium = true;
-                localStorage.setItem('meow_v11_state', JSON.stringify(state));
-                updateUI();
-                tg.showAlert("✨ ПРЕМИУМ АКТИВИРОВАН!");
-            }
-        });
+    function doInvite() {
+        const userId = tg?.initDataUnsafe?.user?.id || "0";
+        const url = `https://t.me{BOT_USERNAME}?start=ref${userId}&text=${encodeURIComponent("Узнай мысли своего кота! 🐾")}`;
+        if(tg) tg.openTelegramLink(url); else window.open(url);
     }
 
+    function saveState() { localStorage.setItem('meow_v12_state', JSON.stringify(state)); }
     window.onload = () => {
-        const saved = localStorage.getItem('meow_v11_state');
+        const saved = localStorage.getItem('meow_v12_state');
         if(saved) { state = JSON.parse(saved); showApp(); }
     };
 </script>
