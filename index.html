@@ -6,161 +6,201 @@
     <script src="https://telegram.org"></script>
     <style>
         :root {
-            --tg-theme-bg-color: #121214;
-            --tg-theme-button-color: #ff9500;
+            --bg: #0f0f11;
+            --accent: #ff9500;
+            --glass: rgba(255, 255, 255, 0.08);
         }
 
         body {
-            background-color: var(--tg-theme-bg-color);
+            background-color: var(--bg);
             color: white;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            height: 100vh;
+            padding-top: 20px;
             margin: 0;
             user-select: none;
-            -webkit-user-select: none;
-            touch-action: manipulation;
-            overflow: hidden;
-            transition: background 0.5s ease;
+            overflow-x: hidden;
         }
 
-        .container { text-align: center; width: 90%; z-index: 2; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; color: var(--accent); }
 
-        h1 { font-size: 32px; margin-bottom: 5px; letter-spacing: -1px; }
-        .subtitle { opacity: 0.6; margin-bottom: 50px; font-size: 14px; }
+        /* БЛОК ХУКОВ */
+        .hooks-container {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
 
-        .scan-button {
-            width: 140px;
-            height: 140px;
-            background: linear-gradient(135deg, #ff9500 0%, #ff5e00 100%);
-            border-radius: 50%;
+        .hook-card {
+            background: var(--glass);
+            padding: 15px;
+            border-radius: 20px;
+            text-align: center;
+            width: 100px;
+            border: 1px solid rgba(255,255,255,0.1);
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .hook-card:active { transform: scale(0.9); background: rgba(255,149,0,0.2); }
+        .hook-card i { display: block; font-size: 24px; margin-bottom: 5px; }
+        .hook-card span { font-size: 12px; font-weight: bold; }
+
+        /* ПЕРЕВОДЧИК */
+        .translator-box {
+            width: 85%;
+            background: var(--glass);
+            padding: 20px;
+            border-radius: 25px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        input {
+            width: 100%;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 12px;
+            border-radius: 12px;
+            color: white;
+            box-sizing: border-box;
+            margin-bottom: 15px;
+            outline: none;
+        }
+
+        .action-btn {
+            background: var(--accent);
+            color: black;
             border: none;
+            padding: 12px 25px;
+            border-radius: 50px;
+            font-weight: bold;
+            width: 100%;
+            cursor: pointer;
+        }
+
+        #result-display {
+            margin-top: 20px;
+            font-style: italic;
+            color: #ffcc00;
+            min-height: 24px;
+            text-align: center;
+        }
+
+        .paw-btn {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(45deg, #ff9500, #ff5e00);
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 65px;
-            cursor: pointer;
-            box-shadow: 0 0 50px rgba(255, 149, 0, 0.3);
-            transition: transform 0.1s, box-shadow 0.3s;
-            animation: pulse 2s infinite;
-            -webkit-tap-highlight-color: transparent;
-            margin: 0 auto;
+            font-size: 40px;
+            margin: 20px 0;
+            box-shadow: 0 0 30px rgba(255,149,0,0.3);
         }
-
-        .scan-button:active { transform: scale(0.9); box-shadow: 0 0 20px rgba(255, 149, 0, 0.5); }
-
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(255, 149, 0, 0.5); }
-            70% { box-shadow: 0 0 0 25px rgba(255, 149, 0, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(255, 149, 0, 0); }
-        }
-
-        #result-card {
-            margin-top: 35px;
-            padding: 25px;
-            background: rgba(255, 255, 255, 0.07);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-radius: 28px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            display: none;
-            animation: slideUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            max-width: 280px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(40px) scale(0.9); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-
-        #text-output { font-size: 22px; font-weight: 700; line-height: 1.3; }
-        
-        /* Классы настроения */
-        .status-hunger { color: #ffcc00; text-shadow: 0 0 15px rgba(255, 204, 0, 0.3); }
-        .status-angry { color: #ff4d4d; text-shadow: 0 0 15px rgba(255, 77, 77, 0.3); }
-        .status-love { color: #ff85a2; text-shadow: 0 0 15px rgba(255, 133, 162, 0.3); }
-
-        .loader { 
-            display: none; 
-            margin-top: 25px; 
-            font-weight: 800; 
-            color: #ff9500; 
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            font-size: 12px;
-            animation: blink 0.8s infinite;
-        }
-
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h1>MeowVibe 🐾</h1>
-        <p class="subtitle">Приложи лапу к сенсору</p>
+    <div class="header">
+        <h1>MeowVibe Pro 🐾</h1>
+        <div style="opacity: 0.5; font-size: 12px;">Твой кот тебя поймет</div>
+    </div>
 
-        <button class="scan-button" onclick="startScan()">🐾</button>
-
-        <div class="loader" id="loader">Считываю мысли...</div>
-
-        <div id="result-card">
-            <div id="text-output"></div>
+    <!-- ХУКИ -->
+    <div class="hooks-container">
+        <div class="hook-card" onclick="playHook('magnet')">
+            <i>🔔</i>
+            <span>Магнит</span>
+        </div>
+        <div class="hook-card" onclick="playHook('stop')">
+            <i>🚫</i>
+            <span>Кыш! (Анти-кусь)</span>
         </div>
     </div>
+
+    <!-- ПЕРЕВОДЧИК -->
+    <div class="translator-box">
+        <input type="text" id="userInput" placeholder="Скажи что-нибудь кожаному...">
+        <button class="action-btn" onclick="translateToCat()">ПЕРЕВЕСТИ НА КОШАЧИЙ</button>
+        <div id="result-display"></div>
+    </div>
+
+    <div class="paw-btn" onclick="scanCatThoughts()">🐾</div>
+    <div style="font-size: 12px; opacity: 0.4;">Узнать мысли кота</div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        const phrases = [
-            { text: "Где моя еда, «кожаный»? 😾", type: "hunger" },
-            { text: "Может не будем сегодня голодать?", type: "hunger" },
-            { text: "Я не люблю диеты. Неси паштет!", type: "hunger" },
-            { text: "Как царапну! Руки прочь! 😼", type: "angry" },
-            { text: "Кусь не только слабый бывает!", type: "angry" },
-            { text: "Тыг-дык на голове устроить?", type: "angry" },
-            { text: "Любимый кожаный хозяин... ❤️", type: "love" },
-            { text: "Мои мяу только для тебя.", type: "love" },
-            { text: "Гладь меня полностью! ✨", type: "love" }
+        const catDictionary = ["Мяу!", "Мррр-мя?", "Шшшш!", "Мяу-мяу!", "Мяфф!", "Пррррр..."];
+        const thoughts = [
+            "Где моя еда, «кожаный»? 😾",
+            "Как царапну! Руки прочь! 😼",
+            "Любимый кожаный хозяин... ❤️",
+            "Тыг-дык на голове устроить?",
+            "Я не люблю диеты. Неси паштет!"
         ];
 
-        function startScan() {
-            tg.HapticFeedback.impactOccurred('heavy');
+        // 1. Функция перевода
+        function translateToCat() {
+            const input = document.getElementById('userInput').value;
+            if(!input) return;
             
-            const card = document.getElementById('result-card');
-            const loader = document.getElementById('loader');
-            const output = document.getElementById('text-output');
-            
-            card.style.display = 'none';
-            loader.style.display = 'block';
-            
-            // Сброс фона тела
-            document.body.style.background = "#121214";
+            tg.HapticFeedback.impactOccurred('medium');
+            const display = document.getElementById('result-display');
+            display.innerText = "Анализирую человеческий...";
             
             setTimeout(() => {
-                const item = phrases[Math.floor(Math.random() * phrases.length)];
-                
-                loader.style.display = 'none';
-                card.style.display = 'block';
-                
-                // Установка текста и цвета
-                output.innerText = item.text;
-                output.className = ""; // сброс
-                output.classList.add('status-' + item.type);
-                
-                // Меняем фон в зависимости от настроения (очень мягко)
-                if(item.type === 'angry') document.body.style.background = "#1a0a0a";
-                if(item.type === 'love') document.body.style.background = "#1a0a12";
-                if(item.type === 'hunger') document.body.style.background = "#1a160a";
-                
+                const randomMeow = catDictionary[Math.floor(Math.random() * catDictionary.length)];
+                display.innerText = "🐱 говорит: " + randomMeow;
                 tg.HapticFeedback.notificationOccurred('success');
-            }, 1800);
+            }, 1000);
+        }
+
+        // 2. Функция мыслей (твои фразы)
+        function scanCatThoughts() {
+            tg.HapticFeedback.impactOccurred('heavy');
+            const display = document.getElementById('result-display');
+            display.innerText = "Считываю биополе...";
+            
+            setTimeout(() => {
+                const thought = thoughts[Math.floor(Math.random() * thoughts.length)];
+                display.innerText = "Кот думает: " + thought;
+                tg.HapticFeedback.notificationOccurred('success');
+            }, 1500);
+        }
+
+        // 3. ФУНКЦИЯ ХУКОВ (Звуки)
+        function playHook(type) {
+            tg.HapticFeedback.notificationOccurred('warning');
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            
+            if(type === 'magnet') {
+                // Имитация высокочастотного писка/приманки
+                oscillator(audioCtx, 880, 'triangle', 0.5);
+                alert("🔊 Включен звук приманки (шуршание)");
+            } else {
+                // Имитация резкого шипения
+                oscillator(audioCtx, 150, 'sawtooth', 0.3);
+                alert("🚫 Издан отпугивающий сигнал");
+            }
+        }
+
+        function oscillator(ctx, freq, type, duration) {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, ctx.currentTime);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start();
+            gain.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + duration);
+            osc.stop(ctx.currentTime + duration);
         }
     </script>
 </body>
